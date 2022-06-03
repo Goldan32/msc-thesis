@@ -1,11 +1,18 @@
 DOCUMENT=thesis
 #MODE=-interaction=batchmode
 
-all: clean xelatex
-	echo
+# Make sure to represent this in gitignore file
+PDF_FOLDER := pdf
 
-xelatex: compile_xelatex
-	mv $(DOCUMENT)-xelatex.pdf ../pdf/$(DOCUMENT).pdf
+.PHONY: all clean
+
+all: xelatex
+
+$(PDF_FOLDER):
+	mkdir -p $@
+
+xelatex: compile_xelatex | $(PDF_FOLDER)
+	mv $(DOCUMENT)-xelatex.pdf $(PDF_FOLDER)/$(DOCUMENT).pdf
 
 compile_xelatex:
 	xelatex $(MODE) $(DOCUMENT)
@@ -15,7 +22,7 @@ compile_xelatex:
 	mv $(DOCUMENT).pdf $(DOCUMENT)-xelatex.pdf
 
 pdflatex: compile_pdflatex
-	mv $(DOCUMENT)-pdflatex.pdf ../pdf/$(DOCUMENT).pdf
+	mv $(DOCUMENT)-pdflatex.pdf $(PDF_FOLDER)/$(DOCUMENT).pdf
 
 compile_pdflatex:
 	pdflatex $(MODE) $(DOCUMENT)
@@ -25,7 +32,7 @@ compile_pdflatex:
 	mv $(DOCUMENT).pdf $(DOCUMENT)-pdflatex.pdf
 
 lualatex: compile_lualatex
-	mv $(DOCUMENT)-lualatex.pdf ../pdf/$(DOCUMENT).pdf
+	mv $(DOCUMENT)-lualatex.pdf $(PDF_FOLDER)/$(DOCUMENT).pdf
 
 compile_lualatex:
 	lualatex $(MODE) $(DOCUMENT)
@@ -42,9 +49,9 @@ test_hu:
 	${MAKE} clean compile_xelatex
 	${MAKE} clean compile_pdflatex
 	${MAKE} clean compile_lualatex
-	mv $(DOCUMENT)-xelatex.pdf ../pdf/$(DOCUMENT)-xelatex-hu.pdf
-	mv $(DOCUMENT)-pdflatex.pdf ../pdf/$(DOCUMENT)-pdflatex-hu.pdf
-	mv $(DOCUMENT)-lualatex.pdf ../pdf/$(DOCUMENT)-lualatex-hu.pdf
+	mv $(DOCUMENT)-xelatex.pdf $(PDF_FOLDER)/$(DOCUMENT)-xelatex-hu.pdf
+	mv $(DOCUMENT)-pdflatex.pdf $(PDF_FOLDER)/$(DOCUMENT)-pdflatex-hu.pdf
+	mv $(DOCUMENT)-lualatex.pdf $(PDF_FOLDER)/$(DOCUMENT)-lualatex-hu.pdf
 
 switch_to_english:
 	sed -i "s|^\\\input{include/thesis-hu}|%\\\input{include/thesis-hu}|" $(DOCUMENT).tex
@@ -55,9 +62,9 @@ test_en:
 	${MAKE} clean compile_xelatex
 	${MAKE} clean compile_pdflatex
 	${MAKE} clean compile_lualatex
-	mv $(DOCUMENT)-xelatex.pdf ../pdf/$(DOCUMENT)-xelatex-en.pdf
-	mv $(DOCUMENT)-pdflatex.pdf ../pdf/$(DOCUMENT)-pdflatex-en.pdf
-	mv $(DOCUMENT)-lualatex.pdf ../pdf/$(DOCUMENT)-lualatex-en.pdf
+	mv $(DOCUMENT)-xelatex.pdf $(PDF_FOLDER)/$(DOCUMENT)-xelatex-en.pdf
+	mv $(DOCUMENT)-pdflatex.pdf $(PDF_FOLDER)/$(DOCUMENT)-pdflatex-en.pdf
+	mv $(DOCUMENT)-lualatex.pdf $(PDF_FOLDER)/$(DOCUMENT)-lualatex-en.pdf
 	${MAKE} switch_to_hungarian
 
 test: test_hu test_en
@@ -65,4 +72,5 @@ test: test_hu test_en
 
 clean:
 	echo Cleaning temporary files...
-	rm -f *.aux *.dvi *.thm *.lof *.log *.lot *.fls *.out *.toc *.bbl *.blg
+	rm -f *.aux *.dvi *.thm *.lof *.log *.lot *.fls *.out *.toc *.bbl *.blg *.pdf
+	rm -rf $(PDF_FOLDER)

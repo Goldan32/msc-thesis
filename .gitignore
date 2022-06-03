@@ -9,6 +9,8 @@
 *.toc
 *.bbl
 *.blg
+*.pdf
+pdf/*
 
 # This is to make my life easier
 .vscode/*
