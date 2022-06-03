@@ -1,0 +1,14 @@
+*.aux
+*.dvi
+*.thm
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.bbl
+*.blg
+
+# This is to make my life easier
+.vscode/*
