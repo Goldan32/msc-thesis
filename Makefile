@@ -72,5 +72,5 @@ test: test_hu test_en
 
 clean:
 	echo Cleaning temporary files...
-	rm -f *.aux *.dvi *.thm *.lof *.log *.lot *.fls *.out *.toc *.bbl *.blg *.pdf
+	rm -rf *.aux */*.aux *.dvi *.thm *.lof *.log *.lot *.fls *.out *.toc *.bbl *.blg *.pdf
 	rm -rf $(PDF_FOLDER)
