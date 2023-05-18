@@ -1,2 +1,5 @@
-# thesis-template-linux
-Taken from the official BME VIK thesis template: http://diplomaterv.vik.bme.hu/hu/
+# Using Rust on Multicore Microcontrollers
+
+Thesis for the Electrical Engineering MSc program at Budapest University of Technology and Economics.
+
+The thesis project is available in this repository: TODO
