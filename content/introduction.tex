@@ -5,3 +5,14 @@
 A bevezető tartalmazza a diplomaterv-kiírás elemzését, történelmi előzményeit, a feladat indokoltságát (a motiváció leírását), az eddigi megoldásokat, és ennek tükrében a hallgató megoldásának összefoglalását.
 
 A bevezető szokás szerint a diplomaterv felépítésével záródik, azaz annak rövid leírásával, hogy melyik fejezet mivel foglalkozik.
+
+
+The most used language in embedded systems today is without a doubt the C language, followed not so closely by C++. While these languages can get the job done in a microcontroller system, they certainly have some shortcomings, such as lacking real memory safety and features present in more modern languages. Rust aims to solve all these problems so using it in microcontroller driven systems is beneficial.
+
+Rust is supported on an ever growing group of microcontrollers. In this project, besides discussing general aspects of Rust development on a microcontroller, I will use a development board with the STM32H745 dual-core chip. Crucially, most of the STM32 controllers have official Rust support and even some development boards. This support however does not extend to the second core of these microcontrollers as these are, as of writing this thesis, a fairly new product of the manufacturer.
+
+During the first part of the project, I will examine how the 2 cores of this MCU work and work together in a conventional C project, and note any hardware peripherals that are useful in inter-core communication or synchronization. After having an understanding of how an example C project works, I will start to develop a Rust project skeleton, that could be used for larger dual-core applications.
+
+While creating the Rust skeleton project, I will research and document the current status of multi-core Rust development and existing solutions. Then I will discuss the possibilities of setting up a dual-core project for this specific microcontroller, and select one that is most appropriate for my task.
+
+Using the selected method and framework, I will test if the capabilities present in a C project could still be used in the new Rust system. If everything is in order, I will create an example dual-core application based on the Rust project skeleton. This will be the second part of this project.
