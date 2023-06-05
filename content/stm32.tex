@@ -1,0 +1,21 @@
+\chapter{STM32H745 Microcontroller}
+
+The STM32H745 is a heterogeneous dual-core microcontroller from STMicroelectronics. For this task I was able to acquire a Nucleo-H745 development board which has a number of useful peripherals besides the aforementioned MCU chip.
+
+\section{Choosing the right hardware}
+
+In the early stages of the project 2 microcontrollers were offered for the task. A quad-core MCU from Texas Instruments with homogeneous architecture and the STM32H745.
+
+After taking a glance at the then current state of multicore Rust, it seemed that a homogeneous device would be the better choice. However the TI MCU was not on a good development board in the sense that it did not have many peripherals which would be required in the second part of the project, as making some external hardware would not fit in the timeframe. Besides this, Texas Instruments microcontrollers are yet to receive rust support. Implementing all the necessary drivers in Rust for a new MCU is certainly possible, but a task like that alone could fill the whole project and is not in the area of study this thesis aims to explore.
+
+The other candidate, the STM32H745 had only one small drawback it being a heterogeneous architecture. In all other aspects it was the better choice for this project. STM32 microcontrollers have considerable Rust support regarding peripheral drivers that implement the HAL (Hardware Abstraction Layer). On top of this, some development boards also have BSP-s (Board Support Package) that implement another abstraction layer above the HAL by hiding even the pin numbers. For example, to turn on a LED with a HAL crate, the user would need to set the \mycode{PB0} pin, but with a BSP one could call a function similar to \mycode{SetLed(1)} and achieve the same effect without looking up the pin that corresponds to the LED. In other words the HAL is for the MCU, while the BSP is for the whole development board. An incomplete BSP exists for the Nucleo-H745 but for reasons explained later, this project will only include the HAL crate for the MCU.
+
+\section{Hardware Capabilities}
+
+\subsection{Power}
+
+\subsection{Clocks}
+
+\subsection{Connectivity}
+
+\subsection{Other useful peripherals}
