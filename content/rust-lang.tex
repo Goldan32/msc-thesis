@@ -12,9 +12,45 @@ Much like C and C++, Rust programs can only be run after they have been compiled
 
 \subsection{Types on the stack}
 
-\subsection{Types on the heap}
+\subsubsection{Simple types}
 
-\subsection{Enums}
+These are the very basic types of Rust representing numbers, booleans and characters. Unlike in C, the size of the following types is not implementation dependent.
+
+For representing numbers one can use \mycode{u8}, \mycode{u16}, \mycode{u32}, \mycode{u64}, \mycode{u128} and \mycode{usize} for representing unsigned integers, where the last one will use as many bits as the platform the code is compiled for (usually 32 or 64). Exchanging the \mycode{u} for an \mycode{i} in these types gives us the signed integer types.
+
+Floating point numbers can be either stored using the \mycode{f32} or the \mycode{f64} type, this is similar to \mycode{float} and \mycode{double} in C.
+
+Characters are represented in memory by 4 bytes to accommodate encodings up to UTF-8.
+
+Rust also has a boolean type which is important for control flow, for example the \mycode{if} expression only allows a boolean expression in its header.
+
+\subsubsection{Enums and Structs}
+
+It is often said that Rust has an algebraic type system. What this mainly refers to is that all the available types can be combined in two ways. A struct will contain every type from its definition at the same time, while an enum will always evaluate to one of the types listed in its definition.
+
+Enums and Structs also count as complete types which means that unlike in C, they cannot be represented as their underlying types by clever pointer arithmetics.
+
+While structs behave mostly the same way as structs in C or classes in C++, enums are different from these common languages. For example an enum could be created for the purpose of representing color encoding types: RGB and hex codes.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    enum ColorFormat {
+        RGB,
+        HexCode
+    }
+\end{lstlisting}
+
+In Rust we can go further, and attach relevant data directly to the enum values.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    enum ColorFormat {
+        RGB(u8, u8, u8),
+        HexCode(String)
+    }
+\end{lstlisting}
+
+This way when a \mycode{ColorFormat} type is passed to a function, it can determine the incoming color format and also access the color itself. In addition to this, the compiler will check if this function does something with each of the enums it can receive, and fails the compilation if, for example \mycode{HexCode} type of color format is not handled.
+
+\subsection{Types on the heap}
 
 \subsection{Type conversions}
 
