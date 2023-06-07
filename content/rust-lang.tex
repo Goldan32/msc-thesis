@@ -124,17 +124,38 @@ Having restrictions like this can prevent the programmer from misinterpreting da
 
 \section{Memory safety}
 
+The Rust compiler is much more strict than that of other commonly used languages. This makes it almost impossible to write unsafe programs but comes with a steeper learning curve.
+
 \subsection{Ownership}
+
+The ownership system of Rust is its most important feature to prevent common memory access violations such as reading an already freed memory segment or leaking memory. Each variable has exactly one owner and if the value from that variable is assigned to another variable, then the first one is "dropped" and becomes invalid. This is also true for variables that store data on the heap. In those cases, the value on the heap, such as the contents of a string, is not copied into a new place, only the owner is changed thus effectively making a shallow copy and invalidating the previous owner.
+
+On top of this, calling a function also counts as a variable assignment, as the local variable inside the function gets initialized with the value of the variable passed as the argument. This means that simply passing a variable to a function eliminates that variable. The strict ownership model also completely eliminates data races as a side-effect in multi-threaded programs.
 
 \subsection{References (borrowing)}
 
+While the concept described previously guarantees a level of memory safety, it is also too strict to use comfortable in a standard programming language. Functions must be able to use variables without invalidating them, this is where references and borrowing come in. When we need to temporarily take ownership of a variable, for example in a function, we say that the variable is borrowed. Borrowing is done using references and reference taking is governed by a few basic principles.
+
+References to a variable can be either mutable or not mutable. A reference needs to be dropped before the original value it referred to is dropped. While a value is borrowed, the original variable does not have ownership of it and can't modify it. A single variable can have either one mutable reference or multiple immutable reference at the same time. By adhering to these basic principles the compiler can guarantee that there will be no memory violations or pointers left dangling during the execution of the program.
+
+There are also generic types for reference counting variables for cases where we cannot know when a variable will be dropped at compile time. They work similar to \mycode{shared\_ptr} in C++ and cause a little bit of runtime overhead so they are only used when absolutely necessary.
+
 \subsection{Lifetimes}
 
-
-
+The lifetime of variables is usually determined by the scope they were created in. This gets increasingly more complicated when introducing heap allocated data and references to that, add in a function that returns a reference to a part of this data and even the compiler can't always infer the correct lifetime of some variables. There is however a way to use lifetime specifiers to connect the lifetime of some variables. Two or more variables with the same lifetime specifiers will always stay active while one of them is active.
 
 \section{Error handling}
 
+In Rust there are two types of errors, and handling them requires two separate paradigms.
+
 \subsection{\mycode{Result} type}
 
+Recoverable errors are handled by the \mycode{Result<T, E>} type. This type could already be seen in the Type conversions chapter of this thesis. It either contains a value of the generic \mycode{T} type which signals that whoever passed this result did not encounter an error and could provide some result, or an error of type \mycode{E} which will contain the type of error that prevented providing a result. These errors are recoverable because it is possible to branch from them and do something in case they were encountered.
+
+A typical use-case is when a program tries to open a file. The return value is in a \mycode{Result} type, and is either a file handler, or an error. Then for example, if the error tells us that the file could not be opened because it did not exist, we may choose to create the file, and continue with the file handler of the new file.
+
 \subsection{\mycode{panic!} macro}
+
+There is however a point in in error chain where recovery is not possible. This is where we can call the \mycode{panic!} macro, optionally with a message. It will try to empty the stack of our program and exit cleanly, then print some information about where the panic occurred.
+
+In embedded rust where we may not have an underlying OS to handle our program quitting, we usually have to write a separate panic handler function. This most commonly is a single line that directs the processor to go into a HALT state. Sometimes interrupts are also disabled to prevent the system from working in an erroneous state.
