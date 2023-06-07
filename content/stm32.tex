@@ -6,7 +6,7 @@ The STM32H745 is a heterogeneous dual-core microcontroller from STMicroelectroni
 
 In the early stages of the project 2 microcontrollers were offered for the task. A quad-core MCU from Texas Instruments with homogeneous architecture and the STM32H745.
 
-After taking a glance at the then current state of multicore Rust, it seemed that a homogeneous device would be the better choice. However the TI MCU was not on a good development board in the sense that it did not have many peripherals which would be required in the second part of the project, as making some external hardware would not fit in the timeframe. Besides this, Texas Instruments microcontrollers are yet to receive rust support. Implementing all the necessary drivers in Rust for a new MCU is certainly possible, but a task like that alone could fill the whole project and is not in the area of study this thesis aims to explore.
+After taking a glance at the then current state of multicore Rust, it seemed that a homogeneous device would be the better choice. However the TI MCU was not on a good development board in the sense that it did not have many peripherals which would be required in the second part of the project, as making some external hardware would not fit in the time frame. Besides this, Texas Instruments microcontrollers are yet to receive rust support. Implementing all the necessary drivers in Rust for a new MCU is certainly possible, but a task like that alone could fill the whole project and is not in the area of study this thesis aims to explore.
 
 The other candidate, the STM32H745 had only one small drawback it being a heterogeneous architecture. In all other aspects it was the better choice for this project. STM32 microcontrollers have considerable Rust support regarding peripheral drivers that implement the HAL (Hardware Abstraction Layer). On top of this, some development boards also have BSP-s (Board Support Package) that implement another abstraction layer above the HAL by hiding even the pin numbers. For example, to turn on a LED with a HAL crate, the user would need to set the \mycode{PB0} pin, but with a BSP one could call a function similar to \mycode{SetLed(1)} and achieve the same effect without looking up the pin that corresponds to the LED. In other words the HAL is for the MCU, while the BSP is for the whole development board. An incomplete BSP exists for the Nucleo-H745 but for reasons explained later, this project will only include the HAL crate for the MCU.
 
@@ -14,8 +14,34 @@ The other candidate, the STM32H745 had only one small drawback it being a hetero
 
 \subsection{Power}
 
+Power can be provided to the MCU in a variety of ways and with different voltages ranging from 3.3 to 11 Volts. This makes it easy for developers to integrate this microcontroller into their designs. In this project however, only the development board will be used. The easiest way to power the development board is through a microUSB port, which is also used for programming and debugging. As connection to a PC is already needed in this early stage of development, the fact that power is also derived from this connection makes this setup comfortable to use or move.
+
 \subsection{Clocks}
+
+In the default setup the MCU starts with an external clock signal that originates from the Board Management Controller. This controller is also responsible for programming and debugging. The microcontroller contains internal oscillators as well as PLL-s. The usage of these can be configured in runtime during the setup phase of an application. Usually in the first part of initializing the application the clock is set, in this case a PLL will be used with the external clock signal from the Board Controller used as reference.
+
+There are several clock domains which makes it possible to fine tune our application for low power consumption. Configuration code can be generated using official tools from the manufacturer using a GUI application. A maximum frequency of 240 MHz can be achieved for the M7 core and 120 MHz for the M4 core.
 
 \subsection{Connectivity}
 
+\subsubsection{Programming and debugging}
+
+This development board is equipped with an on-board ST-LINK debugger and programmer. This module can handle the USB connection to a computer and also act a virtual COM port or a debug port. There are multiple ways of programming the device using the ST-LINK connection, a programmer is available in the official STM IDE (Integrated Development Environment) but there are also standalone command line and GUI tools for programming. Any suitable debugger can connect to the debug port of the ST-LINK module, debugging will be described more in-depth in a further chapter.
+
+\subsubsection{Ethernet}
+
+Both cores of the microcontroller have pins that can be considered to use an ethernet interface. The development board has an ethernet connector that is compliant with the IEE-802.3-2002 standard. The ethernet connector is a really interesting feature for this project as in the second part when developing a more complex application. Such an application would be able to provide a minimal webGUI (Graphical User Interface) thanks to the ethernet connector.
+
+\subsubsection{USB}
+
+The development board has in total 2 USB Micro-AB connectors. One of them is connected to the previously mentioned ST-LINK connector so it cannot be configured freely. However the other one is fully available for the programmer to use. Most likely this project will not utilize the USB port, but with similar complexity, and sometimes similar speeds, it could replace the ethernet port as another high-speed communication interface if needed.
+
+\subsubsection{USART}
+
+There are multiple pins that can be configured for USART peripherals, however the most important in this case is the one available through the \mycode{PD8} and \mycode{PD9} pins, which can be connected to the ST-LINK connector. By doing this we have a way of communicating with our program through a trivial communication protocol that requires minimal setup and driver support, and using the same USB port we used for powering and programming the board. Throughout development this port will be used for displaying debug traces.
+
 \subsection{Other useful peripherals}
+
+\subsubsection{GPIO-s}
+
+As the pins of the STM32H745 MCU are very configurable and 144 pins are routed onto the development board, there is a considerable amount of GPIO-s that can be utilized if needed, though many of them are taken by other peripherals on the board. Three GPIO-s are each routed to a different colored user LED on the board, which is extremely useful in early bring-up of a board as blinking an LED is often considered the "Hello World of hardware related projects". Also present on the board are 2 buttons, one of which is a dedicated reset button while the other can be configured by the user.
