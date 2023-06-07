@@ -52,10 +52,75 @@ This way when a \mycode{ColorFormat} type is passed to a function, it can determ
 
 \subsection{Types on the heap}
 
+These are the types where ownership and references are important questions. A good example would be a string, where multiple parts of our code would like to modify or read the value, but ideally we only want one owner that is responsible for freeing up the memory used when the string is not needed anymore. Most of the types that contain data on the heap are part of the standard library of Rust. These include the aforementioned strings and some containers like \mycode{Vector}. How rust handles these data types will be discussed further on.
+
 \subsection{Type conversions}
 
+There are no implicit conversions between types in Rust. If we have a function in C that expects a \mycode{uint32\_t} as an argument and we try to pass it a variable of \mycode{uint16\_t} type, we may not even get a warning from the compiler and certainly not an error, as implicit type conversion is a part of C and C++. In Rust however, passing a \mycode{u16} type variable to a function that expects the \mycode{u32} type will result in a compile error. The compiler signals this inconsistency and suggests a solution.
 
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    error[E0308]: mismatched types
+    --> src/main.rs:7:15
+     |
+   7 |     print_u32(mynum);
+     |     --------- ^^^^^ expected `u32`, found `u16`
+     |     |
+     |     arguments to this function are incorrect
+     |
+   note: function defined here
+    --> src/main.rs:1:4
+     |
+   1 | fn print_u32(num: u32) {
+     |    ^^^^^^^^^ --------
+   help: you can convert a `u16` to a `u32`
+     |
+   7 |     print_u32(mynum.into());
+     |                    +++++++
+   
+   For more information about this error, try `rustc --explain E0308`.
+\end{lstlisting}
 
+When we try to reverse the types in our example, C issues a warning about truncating integers, but still many programmers can just ignore this warning and assume the data is properly sanitized. Rust obviously will not let a code compile with integer truncation, but the solution is a bit more complex this time, because a possibility is present that the value does not fit in the smaller type.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    error[E0308]: mismatched types
+    --> src/main.rs:7:15
+     |
+   7 |     print_u16(mynum);
+     |     --------- ^^^^^ expected `u16`, found `u32`
+     |     |
+     |     arguments to this function are incorrect
+     |
+   note: function defined here
+    --> src/main.rs:1:4
+     |
+   1 | fn print_u16(num: u16) {
+     |    ^^^^^^^^^ --------
+   help: you can convert a `u32` to a `u16` and panic if the converted value doesn't fit
+     |
+   7 |     print_u16(mynum.try_into().unwrap());
+     |                    ++++++++++++++++++++
+   
+   For more information about this error, try `rustc --explain E0308`.
+\end{lstlisting}
+
+In this case the compiler suggests that we use \mycode{.unwrap\(\)}, which terminates the program if the previous function in the chain returned an error. However it is also possible to branch from the error, do something with the provided value and then even try to convert again to the smaller type, for example this would be one way to implement integer saturation.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    fn print_u16(num: u16) {
+        println!("{num}");
+    }
+
+    fn main() {
+        let mynum: u32 = 66000;
+        print_u16(match mynum.try_into() {
+            Ok(val) => val,
+            Err(_) => u16::MAX
+        });
+    }
+\end{lstlisting}
+
+Having restrictions like this can prevent the programmer from misinterpreting data in a function as it will always be in the smallest type possible that fits it without errors.
 
 \section{Memory safety}
 
