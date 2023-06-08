@@ -16,10 +16,50 @@ Rust projects are fairly lightweight compared to projects generated from some ID
 
 \begin{lstlisting}[language=C,frame=single,float=!ht]
     .
-    ├── Cargo.toml
-    └── src
-        └── main.rs
+    |-- Cargo.toml
+    |-- src
+        |-- main.rs
     
 \end{lstlisting}
 
 Essentially only 2 files were created. \mycode{Cargo.toml} will hold information about the project, such as its name and version, but it will also list all the dependencies. Build targets can also be defined in this file, it basically fills the role of a "project setting" or "project properties" window from an IDE. This file can be modified by hand and the changes will take effect on the next compilation, but some cargo commands will also modify it automatically. For example a dependency can be added by listing it under the \mycode{[dependencies]} section header and building the project, or by running the \mycode{cargo add <crate>} command, which will automatically list the dependency in the file. Some features can also be defined for these dependencies, the main one being their minimum required version, but soon some other ones will become important when the STM32 related crated will be added.
+
+The other file is the \mycode{main.rs} source file that contains the entry point of the program, a main function. By default, this file contains a basic "Hello World" program, so the project can already be built and ran.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    fn main() {
+        println!("Hello, world!");
+    }
+\end{lstlisting}
+
+Of course this basic project is not going to work on a microcontroller without some major changes. Here are the necessary steps that need to be taken before a new Rust project produces a binary that can be loaded onto an MCU.
+
+When we installed the Rust toolchain on a computer, it automatically detected the CPU-s architecture, and fetched a compiler specific to that. To compile to another architecture, we need to add another target to our toolchain. This can be done with the command \mycode{rustup target install thumbv7em-none-eabihf} which installs a compiler that can target ARM Cortex-M cores with floating point support. The target depends on the capabilities of the microcontroller, but in case of this project, both cores of the STM32H745 can use this toolchain.
+
+A way to program the microcontroller is also needed. A Rust native tool is cargo-flash which can be installed with \mycode{cargo install cargo-flash}. It automatically detects how to program a microcontroller based on its type if it is supported. However once the project was built, any other way can be used to program the MCU. Further on, I will talk about challenges around programming this specific device.
+
+Once our toolchain was expanded with the previous tools, we need to modify the basic project to use these tools. A new configuration file \mycode{.cargo/config} should be created. This is also a TOML file that configures the project, but instead of storing dependencies and higher level concepts, it will relate directly to the compilation phase. The new file will contain a line which selects the previously added target as the default one when building. Information about the linking phase can also be supplied here for example, in the \mycode{cortex-m} crate there is a linker script \mycode{link.x} which needs to be explicitly included in every project that uses this, or any other crate using it. Many other tweaks can be configured in this file, but these two are necessary for building a minimal working program. Here is a sample file that contains these two configurations.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    [build]
+    target    = "thumbv7m-none-eabihf"
+    rustflags = [ "-C", "link-arg=-Tlink.x" ]
+\end{lstlisting}
+
+Of course the basic linker script from will not be enough, a linker script specific to the MCU we intend to use must also be supplied. This can be done by creating a file called \mycode{memory.x} at the root of the project, and filling it with information about the memory mapping of the selected microcontroller. However in this case the linker script is already part of the \mycode{stm32h7xx-hal} crate, so it does not need to be created manually if we plan to use this crate.
+
+With that done, we will need to add some necessary dependencies. As a \mycode{memory.x} linker script was not created manually, we must include the \mycode{stm32h7xx-hal} under as a dependency. Besides its minimal version, a feature set also needs to be specified here for this crate to work properly. Another necessity was already mentioned before, a panic handler needs to be created as any code can panic unexpectedly, and the program cannot quit without an underlying operating system. \mycode{panic-halt} is a crate that adds a default panic handler that puts the processor into a HALT state when the program running on it panics. So a working project for the M7 core should contain at least the following contents in its \mycode{Cargo.toml} file.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    [package]
+    name = "blink"
+    version = "0.1.0"
+    edition = "2021"
+    
+    [dependencies]
+    cortex-m = "0.7.7"
+    panic-halt = "0.2.0"
+    stm32h7xx-hal = {version = "0.14.0", features = ["stm32h747cm7"]}
+\end{lstlisting}
+
+The only thing left after this is writing valid code that does something, such as blinking an onboard LED. Notice that there was no step that involved code generation based on GUI tools as was the case in STMCubeIDE. This means that all configurations will need te be done directly in the code, which can sound scary, but the rich types and strict compiler of Rust will help us make sure that the hardware passes the smoke test when we turn it on for the first time.
