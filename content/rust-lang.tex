@@ -159,3 +159,7 @@ A typical use-case is when a program tries to open a file. The return value is i
 There is however a point in in error chain where recovery is not possible. This is where we can call the \mycode{panic!} macro, optionally with a message. It will try to empty the stack of our program and exit cleanly, then print some information about where the panic occurred.
 
 In embedded rust where we may not have an underlying OS to handle our program quitting, we usually have to write a separate panic handler function. This most commonly is a single line that directs the processor to go into a HALT state. Sometimes interrupts are also disabled to prevent the system from working in an erroneous state.
+
+\section{Crates}
+
+Rust has an official package manager called cargo. With cargo we can easily add third party crates, which are similar to libraries in other languages, as dependencies to our project using the \mycode{cargo add <crate>} command. Cargo can do a lot more things but for this project, compiling the code via \mycode{cargo build} and handling crates are the most important features.
