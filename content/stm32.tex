@@ -45,3 +45,20 @@ There are multiple pins that can be configured for USART peripherals, however th
 \subsubsection{GPIO-s}
 
 As the pins of the STM32H745 MCU are very configurable and 144 pins are routed onto the development board, there is a considerable amount of GPIO-s that can be utilized if needed, though many of them are taken by other peripherals on the board. Three GPIO-s are each routed to a different colored user LED on the board, which is extremely useful in early bring-up of a board as blinking an LED is often considered the "Hello World of hardware related projects". Also present on the board are 2 buttons, one of which is a dedicated reset button while the other can be configured by the user.
+
+\subsubsection{Hardware semaphores}
+
+The hardware semaphore block on this system provides 32 32-bit register based semaphores. The semaphores can be used to ensure synchronization between different processes running between different cores. They provide a non-blocking mechanism to lock semaphores in an atomic way even when multiple cores are trying to access them at the same time. There are two ways of locking one of these hardware semaphores. The first method is useful when not only the other core, but some other process from any core could try to access the semaphore. With this method, the \mycode{COREID} and \mycode{PROCID} are written to the semaphore, followed by a read check. A one-step-lock is also available, where only the \mycode{COREID} is read from the semaphore.
+
+The semaphores are able to generate an interrupt on any of the interrupt lines, this needs to be configured during peripheral initialization phase. A semaphore is only cleared when \mycode{COREID} and \mycode{PROCID} match, except that a global clear is available per \mycode{COREID}. All 32 hardware semaphores have the following features: 8-bit PROCID, 4-bit COREID, 2 interrupt lines, and lock indication.
+
+The semaphore is free when its LOCK bit is 0. In this case, the COREID and PROCID are also 0. When the LOCK bit is 1, the semaphore is locked and the COREID indicates which AHB bus master locked it. The PROCID indicates which process of that AHB (Advanced High-performance Bus) bus master locked the semaphore. When write locking a semaphore, the COREID is taken from the master ID and the PROCID is taken from the write data. When read locking the semaphore, the COREID is taken from the AHB bus master ID, and the PROCID is zero. There is no PROCID available with the 1- step (read) lock. The COREID is taken from the AHB bus master ID. The PROCID is written by the software of that AHB bus master. Each AHB bus master process must have a unique PROCID. PROCID is only available in the 2-step lock procedure.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/hw-semaphore.png}
+    \caption{Hardware semaphore state diagram \cite{HWSemaphore}}
+    \label{fig:HWSemaphore}
+\end{figure}
+
+Clearing a semaphore is a protected process, to prevent accidental clearing by a AHB bus master or by a process that does not have the semaphore lock right. The semaphore clear procedure consists in writing to the semaphore with the corresponding COREID and PROCID and LOCK = 0. When cleared, the semaphore LOCK, the COREID, and the PROCID are all 0. When cleared, an interrupt may be generated to signal the event. To this end, the semaphore interrupt must be enabled.
