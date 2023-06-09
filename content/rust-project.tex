@@ -58,8 +58,135 @@ With that done, we will need to add some necessary dependencies. As a \mycode{me
     
     [dependencies]
     cortex-m = "0.7.7"
+    cortex-m-rt = "0.7.3"
     panic-halt = "0.2.0"
     stm32h7xx-hal = {version = "0.14.0", features = ["stm32h747cm7"]}
 \end{lstlisting}
 
 The only thing left after this is writing valid code that does something, such as blinking an onboard LED. Notice that there was no step that involved code generation based on GUI tools as was the case in STMCubeIDE. This means that all configurations will need te be done directly in the code, which can sound scary, but the rich types and strict compiler of Rust will help us make sure that the hardware passes the smoke test when we turn it on for the first time.
+
+The first step of writing embedded code is getting rid of the standard library crate and the traditional main function with the \mycode{#![no_std]} and \mycode{#![no_main]} directives. Of course the program will still need an entry point, and that is why the \mycode{cortex-m-rt} crate is included in the project. This crate provides the \mycode{#[entry]} directive that can mark a function as the entry point of the program. It can still be called main, but is must have the following signature.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    #[entry]
+    fn main() -> ! {
+        loop {}
+    }
+\end{lstlisting}
+
+This code snippet describes main as a function that takes no arguments and does not return at all. This is why only a loop is present in its body, the loop expression is a shorthand for an infinite loop in Rust.
+
+To make a simple blinking program only two more things are required. First we need to have some method to measure the time between the toggles of an LED, then a function that can actually toggle the LED. The \mycode{cortex-m} crate contains a \mycode{delay\_ms()} function that will insert the appropriate amount of NOP assembly statements to the code to wait at least the specified amount of milliseconds. Interrupts and a timer peripheral could also be used, but at this point we only aim to create a minimal working application and using busy waits is much easier. For the LED-s to work we just need to take the \mycode{GPIOE} peripheral and split it into a structure of pins. Then we take the \mycode{pe1} pin, configure it into push-pull mode and it can be controlled with the \mycode{set\_high()} and \mycode{set\_high()} functions.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+#![no_main]
+#![no_std]
+
+use cortex_m_rt::entry;
+use stm32h7xx_hal::{pac, prelude::*};
+use panic_halt as _;
+
+#[entry]
+    fn main() -> ! {
+        let cp = cortex_m::Peripherals::take().unwrap();
+        let dp = pac::Peripherals::take().unwrap();
+
+        let pwr = dp.PWR.constrain();
+        let pwrcfg = pwr.freeze();
+
+        let rcc = dp.RCC.constrain();
+        let ccdr = rcc.sys_ck(100.MHz()).freeze(pwrcfg, &dp.SYSCFG);
+
+        let gpioe = dp.GPIOE.split(ccdr.peripheral.GPIOE);
+
+        // Configure PE1 as output.
+        let mut led = gpioe.pe1.into_push_pull_output();
+
+        // Get the delay provider.
+        let mut delay = cp.SYST.delay(ccdr.clocks);
+
+        loop {
+            led.set_high();
+            delay.delay_ms(500_u16);
+
+            led.set_low();
+            delay.delay_ms(500_u16);
+        }
+
+    }
+\end{lstlisting}
+
+One main difference in Rust compared to C is that peripherals are objects and can only be created or taken in a certain way instead of just creating a variable with the appropriate type. For example, we are forced to set power constraints to be able to set the system clock to a frequency, which in turn is needed to access the GPIO-s. Both the peripherals from the \mycode{cortex-m} and the \mycode{stm32h7xx-hal} crate are part of a singleton module. This is done deliberately so they are not taken more times than one by accident, which is very useful for single core applications, but may become bothersome with multicore usage. This is of course an open issue with the \mycode{cortex-m} crate and is yet to be assessed. \cite{MulticorePeripherals}
+
+With all this, a simple, single core application is ready and we can start to research how it can be made to accommodate code for the other core. Loading the application is possible with the previously mentioned \mycode{cargo-flash} tool, though it will not be able to figure out the chip type, it can supplied as an argument.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    cargo flash --chip STM32H745ZITx
+\end{lstlisting}
+
+\section{Multicore project structure}
+
+This section discusses possible structures and hierarchies for a multicore project in Rust for the STM32H745 microcontroller.
+
+\subsection{Separate projects for cores}
+
+The first idea of a multicore project is to copy the structure of multicore C setup as closely as possible. This solution would require two completely separate projects for the two cores which would allow for great flexibility as the code would be loosely coupled between cores. Developing independent applications for the two cores would be the most comfortable this way. However a way for the two cores to communicate must also be included in a project like this, and that is most commonly done using some sort of shared memory. Defining shared memory sections requires the connection of the two projects on some level at least in the linking phase of compilation. As of writing this part of the essay, no project structured like this could be found that could support all the necessary features. This means that if this method of project organization is selected, besides making an example application, a framework also needs to be created to support the structure. This would not be impossible but would be questionable if it would fit into the time frame of the project, so it necessary to explore other ways of creating a multicore project structure.
+
+\subsection{Single project for all cores}
+
+At the other end of the spectrum, it is possible to compile code for both cores from a single project by modifying the linker script. This could be achieved by defining the entry point of the second core and and placing its code in the correct memory segment using the \mycode{memory.x} linker script. The advantage of this method over the previous one is that shared memory is easily defined and handled as there will not be separate compilation and linking for the two cores, it will be done in one go. There are also drawbacks however, for example the two cores can ever only use the same crates, as there is only one project so its dependencies cannot be changed for each core. On top of this, the usage of peripherals will run into the same problem discussed earlier. As the peripherals form a singleton module and there is only a way to "take" them but no way to "give" them, only one core will be able to access them safely. Finding a workaround for this issue without compromising safety is also a task that may run out of the time frame of the project.
+
+Despite the drawbacks, one more advantage is that there is a very low level example project using this project structure from a prominent member of the embedded Rust community. \cite{DualCoreDemo} This example project does not use the \mycode{stm32h7xx-hal} crate get access to the peripherals but rather a crate called \mycode{stm32-ral}. This register access layer crate provides access to the peripheral registers of the microcontroller, so it circumvents the singleton limitation of HAL crates. However using this crate for a bigger project may not be feasible as more complex peripherals, for example the ethernet connector, can be difficult to use without drivers and only using the peripheral registers.
+
+During this research, a half solution was found for this obstacle. By using both the \mycode{stm32h7xx-hal} and the \mycode{stm32-ral} crates, both cores can have access to the peripherals. The M7 core would use the HAL crate and the M4 core would use the registers to access the peripherals. This would introduce a limitation into further application development, as drivers would only be available for the M7 core. Still, the M4 core could access peripherals, and handling the less complex ones could be done using registers, while the M7 core would use the more complex ones with proper HAL drivers.
+
+To create this project, we need to update the \mycode{Cargo.toml}, \mycode{memory.x} and \mycode{main.rs} files. \mycode{Cargo.toml} will receive the following line in its dependencies section.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    stm32ral = { version = "0.8", features = ["stm32h747cm4"], default-features = false }
+\end{lstlisting}
+
+Notice that while the \mycode{stm32h7xx-hal} crate was added with \mycode{stm32h747cm7} features, the register access layer is added with \mycode{stm32h747cm4} features, as it will be used by the M4 core. The linker file will also needs to be modified, which means that is needs to be copied out from the HAL crate and included in our project as a file so it can be edited. Besides the default definitions in this file we need to define the stack, reset table and vector table for the second core. The flash area for the second core is already defined in the script, so as an extension we just need to populate it with the correct code. The stack of the second core can be defined as follows. For reference, the definition of the stack for the first core is also presented.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    _stack_start = ORIGIN(RAM) + LENGTH(RAM);
+    _cpu2_stack_start = ORIGIN(SRAM2) + LENGTH(SRAM2);
+\end{lstlisting}
+
+To make sure that the reset and vector tables of the second core will be at the correct parts of the flash, the following code can be added to the \mycode{SECTIONS} block of the linker script.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    .flash2 : ALIGN(4) {
+        LONG(_cpu2_stack_start);
+        KEEP(*(.flash2.reset_vector));
+        KEEP(*(.flash2.vector_table));
+        *(.flash2 .flash2.*);
+        . = ALIGN(4);
+    } > FLASH2
+\end{lstlisting}
+
+Finally, a main function can be created for the second core.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    unsafe extern "C" fn main2() -> ! {
+    write_reg!(rcc, RCC, AHB4ENR, GPIOBEN: Enabled);
+    write_reg!(gpio, GPIOB, MODER, MODER0: Output, MODER14: Output);
+    write_reg!(gpio, GPIOB, ODR, 0);
+    loop {
+        write_reg!(gpio, GPIOB, BSRR, BS0: 1);
+        cortex_m::asm::delay(4_000_000);
+        write_reg!(gpio, GPIOB, BSRR, BR0: 1);
+        cortex_m::asm::delay(4_000_000);
+    }
+}
+
+#[no_mangle]
+#[link_section=".flash2.reset_vector"]
+pub static CPU2_RESET_VECTOR: unsafe extern "C" fn() -> ! = main2;
+\end{lstlisting}
+
+The function itself initializes a GPIO and its clock, then toggles it every 4 million CPU cycles. The actual time of the delay will be determined by the frequency configured by the other core. Below the function the directives can be seen that will place the address of this function in the reset vector for the M4 core. While this solution could work well, there are some compromises, so it is worth investigating further in hopes of finding a better project structure.
+
+\section{The microamp framework}
+
+

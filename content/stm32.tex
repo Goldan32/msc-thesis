@@ -10,6 +10,13 @@ After taking a glance at the then current state of multicore Rust, it seemed tha
 
 The other candidate, the STM32H745 had only one small drawback it being a heterogeneous architecture. In all other aspects it was the better choice for this project. STM32 microcontrollers have considerable Rust support regarding peripheral drivers that implement the HAL (Hardware Abstraction Layer). On top of this, some development boards also have BSP-s (Board Support Package) that implement another abstraction layer above the HAL by hiding even the pin numbers. For example, to turn on a LED with a HAL crate, the user would need to set the \mycode{PB0} pin, but with a BSP one could call a function similar to \mycode{SetLed(1)} and achieve the same effect without looking up the pin that corresponds to the LED. In other words the HAL is for the MCU, while the BSP is for the whole development board. An incomplete BSP exists for the Nucleo-H745 but for reasons explained later, this project will only include the HAL crate for the MCU.
 
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[height=150mm, keepaspectratio, angle=90]{figures/devboard.jpg}
+    \caption{The STM32 Nucleo-H745 Development Board}
+    \label{fig:Nucleo-H745}
+\end{figure}
+
 \section{Hardware Capabilities}
 
 \subsection{Power}
