@@ -11,6 +11,7 @@
 *.blg
 *.pdf
 pdf/*
+*.swp
 
 # This is to make my life easier
 .vscode/*
