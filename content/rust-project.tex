@@ -297,3 +297,15 @@ The last thing we need to do is define a memory section that can be used as a sh
         . = ALIGN(8);
     } > AXISRAM
 \end{lstlisting}
+
+\section{Build flow}
+
+The microamp framework is in alpha state so it requires the nightly version of the rust toolchain. Besides that, building the project is pretty simple using the \mycode{microamp} command.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    cargo +nightly microamp --bin blink --release 
+\end{lstlisting}
+
+\section{Flashing}
+
+Loading the program onto the MCU is no longer possible using \mycode{cargo-flash} as we now have two binaries after a single build. Images that contain the code for one or both of the cores can be flashed into the MCU using an official GUI tool from ST called CubeProgrammer. Before flashing a tool called \mycode{srec_cat} is used to create a single image from the two core specific outputs. The unified image can then be flashed using the CubeProgrammer program.
