@@ -189,4 +189,111 @@ The function itself initializes a GPIO and its clock, then toggles it every 4 mi
 
 \section{The microamp framework}
 
+The microamp framework was developed recently as a framework for multicore embedded devices. It sort of combines the previous two approaches by providing a way to compile different codes for the two cores, but retaining the possibility of placing variables in shared memory. The framework provides two main functionalities. One of them is the \mycode{#[shared]} attribute, which can signal that a variable should be placed in shared memory. This also requires that some parts of the memory map must be marked as shared in the linker script, and the variable must also be static. The other main functionality is code sharing and division between the cores. By default, every code will be compiled and loaded onto both cores. However with attributes such as \mycode{#[cfg(core = "0")]} or the \mycode{cfg!(core = "0")} macro parts of the code can be directed to only be compiled to a specific core.
 
+\subsection{Shared variables}
+
+As already stated, shared variables can be declared the following way.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    #[shared]
+    static mut SHARED_VAR: u32 = 0;
+\end{lstlisting}
+
+The attribute does not affect the compile process directly as this variable will be present in the binary output for both cores, but possibly on different memory addresses. However here is where the microamp framework comes in. After the compilation of the first core is done the location of any variable marked as shared will be stored, and during the building of the second core binary, these location of these variables can be set to match the addresses found in the first image.
+
+Accessing these variables from any core is obviously an unsafe action so rust forbids it outside of code blocks marked \mycode{unsafe}. We usually need unsafe blocks to directly access memory anyway, that does not mean these accesses cannot be made safe, it just means that the potential of memory access violations or data races are present, and the programmer should take extra care with these parts of the code. In the case of a single shared variable a semaphore would suffice for making its access safe. Ideally, a hardware semaphore should be used, but for the first proof-of-concept project, the \mycode{AtomicU8} type will work in almost all cases. The only time a software semaphore cannot work correctly is if the two cores request access in the same clock cycle. For a real embedded device that margin of error is not good enough, but for this example, it will work fine.
+
+First, we have to declare another shared variable.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    const CORE0: u8 = 0;
+    const CORE1: u8 = 1;
+    const LOCKED: u8 = 2;
+
+    #[shared]
+    static SEMAPHORE: AtomicU8 = AtomicU8::new(CORE0);
+\end{lstlisting}
+
+Some constants are also defined to make the example easier to understand. Next, two constant variables are created, but the value of them will differ based on which core we are currently compiling for.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    let (our_turn, next_core) = if cfg!(core = "0") {
+        (CORE0, CORE1)
+    } else {
+        (CORE1, CORE0)
+    };
+\end{lstlisting}
+
+With these variables the semaphore can now be locked and unlocked. Unlocking automatically gives the resource to the other core.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    while SEMAPHORE
+        .compare_exchange(our_turn, LOCKED, Ordering::AcqRel, Ordering::Relaxed)
+        .is_err()
+    {
+        // Busy wait if the lock is held by the other core
+    }
+
+    // Release the semaphore
+    SEMAPHORE.store(next_core, Ordering::Release);
+\end{lstlisting}
+
+\subsection{Divergent code}
+
+It is not a strange thing in Rust that compile time directives look similar to "active code" that will actually be translated to machine instructions. This is by design so the code becomes readable on a higher level, however makes the language harder to understand when dealing with low level compilation tasks. In this example project the infinite loop of the application will be fully different for the two cores.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    loop {
+        match () {
+            #[cfg(core = "0")]
+            () => {
+                writeln!(tx, "Hello World!\r\n").unwrap();
+                while SEMAPHORE
+                    .compare_exchange(our_turn, LOCKED, Ordering::AcqRel, Ordering::Relaxed)
+                    .is_err() {}
+                unsafe {if SHARED > 5 {delay_time = 1000_u16}}
+                SEMAPHORE.store(next_core, Ordering::Release);
+                led.set_high();
+                delay.delay_ms(delay_time);
+        
+                led.set_low();
+                delay.delay_ms(delay_time);
+            }
+            #[cfg(not(core = "0"))]
+            () => {
+                while SEMAPHORE
+                    .compare_exchange(our_turn, LOCKED, Ordering::AcqRel, Ordering::Relaxed)
+                    .is_err() {}
+                unsafe {SHARED += 1;}
+                SEMAPHORE.store(next_core, Ordering::Release);
+                led2.set_high();
+                delay.delay_ms(500_u16);
+        
+                led2.set_low();
+                delay.delay_ms(500_u16);
+            }
+        }
+    }
+\end{lstlisting}
+
+When this code is compiled, the M7 core will only contain the upper arm of the match expression and the M4 will get the lower arm. In this example program one LED is continually toggled by the M7 core, while another one is toggled by the M4 core. The M4 core increments the shared variable by one in every iteration, while the other core reads it every time. After 5 cycles of this, the blinking speed of the LED operated by the M7 core is reduced by a factor of 4. This indicates that the variable can be written by one of the cores and written by the other.
+
+The first part of this code is the same for both cores, which in turn is the same as the code in the single core case. Both cores create an instance of the singleton peripherals, so they both can have unrestricted access. This is another area where data races need to be prevented by the programmer. In this case the cores never use the same GPIO port, the LED-s are operated are located on separate ones, but in the future, if the two cores do need to use the same peripheral, they will also need to be protected by a semaphore, ideally a hardware semaphore.
+
+\section{Linker scripts}
+
+There is one more thing missing for the dual-core program to function properly. The microamp framework requires a separate linker script called \mycode{core0.x}, \mycode{core1.x} etc., one for every core. This presents another problem for this project. The \mycode{link.x} linker script from the \mycode{embedded-hal} crate is special in the sense that it wants to include a linker file called \mycode{memory.x}. In simple cases this is not an issue as HAL crates usually provide this file and if not, we can create it in the root of our project. However the microamp framework does not require this the \mycode{memory.x} script, but separate ones like \mycode{core0.x}, which usually hold almost the same content as the \mycode{memory.x} script just a bit more customized for the specific core.
+
+So the problem is that \mycode{link.x} requires a single \mycode{memory.x}, but we have \mycode{core0.x} and \mycode{core1.x} which hold similar content but differ in some places. For example, the \mycode{stm32h7xx-hal} crate requires that a \mycode{RAM} and a \mycode{FLASH} symbol is defined in one of the linker scripts of the project. However exactly these symbols need to differ for the two cores, so this definition cannot be at a common place.
+
+The workaround this issue is as follows. In both \mycode{core0.x} and \mycode{core1.x} the memory and the \mycode{RAM} and \mycode{FLASH} symbols are defined at the start of the linker script. The memory map is taken directly from the \mycode{memory.x} file of the HAL crate. After these are defined, the \mycode{link.x} script can be included so it is part of the build process. This means that is can be removed from the \mycode{.cargo/config} file. As we know, the \mycode{link.x} script will try to include a \mycode{memory.x} file so it needs to exist, but cannot and does not need to hold any information, so in my case it is just an empty file. The rest of the core specific linker scripts is \mycode{SECTIONS} block which only differs at the very end where the reset and interrupt vectors are defined, as we have to make sure those go to the correct flashes.
+
+The last thing we need to do is define a memory section that can be used as a shared memory. For this demonstration the \mycode{AXISRAM} memory was chosen. Both cores have read and write access to it so it can serve this purpose. The following lines should be added in the \mycode{SECTIONS} block to define the shared memory.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    .shared : ALIGN(8) {
+        KEEP(microamp-data.o(.shared));
+        . = ALIGN(8);
+    } > AXISRAM
+\end{lstlisting}
