@@ -1,0 +1,43 @@
+\chapter{Improvements to the Basic Project}
+
+In the previous chapter the focus was on creating a project that can target a dual-core STM32 microcontroller. It was however only a basic "Hello World" type project that can be massively improved upon. In this chapter I will demonstrate the steps that were taken before attempting to build a proper example project.
+
+\section{UART}
+
+Establishing a serial connection between the target MCU and the host PC is usually the most important first step at the start of a new embedded project. While an UART line may not have full debugging capabilities, it allows for quick and relatively easy text based communication with the host. These traces are a very effective tool in determining where a program gets stuck in a loop or panics.
+
+The following code brings up the UART interface that is linked to the ST-Link connector on the board. In this project, this UART interface is used for debugging purposes, so only the rx line is not in use. Rust generates warnings for variables that are not used, this can be avoided by prepending an underscore to the unused variable. The serial line is configured to operate with 19200 baudrate and without flow control.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    let tx = gpiod.pd8.into_alternate();
+    let _rx = gpiod.pd9.into_alternate();
+    let serial = dp
+        .USART3
+        .serial((tx, _rx), 19200.bps(), ccdr.peripheral.USART3, &ccdr.clocks)
+        .unwrap();
+    let (mut tx, _rx) = serial.split();
+\end{lstlisting}
+
+\section{Debugger}
+
+Using traces on a serial line for detecting errors in the code may not be sufficient in all cases. Moreover the overhead of printing to this peripheral can disrupt the timing of certain parts of the program. In these cases configuring a debugger becomes a necessity.
+
+All STM32 development boards are equipped with an on-board ST-Link debugger. ST-Link connects to the host PC through a USB interface. The ST-Link is able to facilitate debugging through different modes of communication for example single-wire interface module (SWIM), serial wire debugging (SWD) and Joint Test Action Group (JTAG) of which the latter is used most often.
+
+The official IDE provided by STM, STMCubeIDE includes full debugging capabilities, however these tools can only handle C and C++ code. The Rust ecosystem does not currently have a standard tool nor does STM provide debugging tools for other languages. Most often though Rust developers will use openocd, gdb and VSCode.
+
+\subsection{OpenOCD}
+
+Open On-Chip Debugger (OpenOCD) is an open source tool that provides debugging and in-system programming capabilities for embedded devices such as this STM32 microcontroller. It serves as a bridge between the development environment on a host machine and the microcontroller's hardware, facilitating the debugging process.
+
+OpenOCD supports various hardware interfaces, such as JTAG, SWD, and various proprietary interfaces provided by different microcontroller vendors. These interfaces are crucial for establishing a connection between the host machine and the microcontroller, enabling the exchange of debugging information. The software can be configured to the parameters of the target device, such as the CPU architecture, target voltage, and other specific settings. This ensures that the debugger communicates effectively with the microcontroller.
+
+OpenOCD acts as a GDB (GNU Debugger) server, providing a standardized interface for debugging tools. GDB is a full fetched debugger but only its server part is used in this configuration. OpenOCD enables GDB to connect to the target microcontroller, allowing developers to interact with and debug their code. The program also supports in-system programming, allowing users to flash the firmware onto the memory of the microcontroller. This is essential for updating or loading new firmware onto the device during the development and debugging process, however it is also possible to start debugging without flashing in new software, which is ideal for our case as the flashing process for this project is non-trivial due to the two cores.
+
+OpenOCD can be integrated with various Integrated Development Environments and toolchains, providing a seamless debugging experience for developers using different development environments. Being an open-source project, it benefits from a vibrant community that contributes to its development and supports a wide range of hardware platforms. It also allows users to customize and extend its functionality based on their specific debugging requirements.
+
+In the case of this project, the OpenOCD configuration is already provided for the evaluation board.\cite{OpenocdConfigFile}
+
+\subsection{GDB}
+
+
