@@ -8,7 +8,7 @@ Establishing a serial connection between the target MCU and the host PC is usual
 
 The following code brings up the UART interface that is linked to the ST-Link connector on the board. In this project, this UART interface is used for debugging purposes, so only the rx line is not in use. Rust generates warnings for variables that are not used, this can be avoided by prepending an underscore to the unused variable. The serial line is configured to operate with 19200 baudrate and without flow control.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:uart-bringup},caption={UART Interface Configuration}]
     let tx = gpiod.pd8.into_alternate();
     let _rx = gpiod.pd9.into_alternate();
     let serial = dp
@@ -32,7 +32,7 @@ Open On-Chip Debugger (OpenOCD) is an open source tool that provides debugging a
 
 OpenOCD supports various hardware interfaces, such as JTAG, SWD, and various proprietary interfaces provided by different microcontroller vendors. These interfaces are crucial for establishing a connection between the host machine and the microcontroller, enabling the exchange of debugging information. The software can be configured to the parameters of the target device, such as the CPU architecture, target voltage, and other specific settings. This ensures that the debugger communicates effectively with the microcontroller.
 
-OpenOCD acts as a GDB (GNU Debugger) server, providing a standardized interface for debugging tools. GDB is a full fetched debugger but only its server part is used in this configuration. OpenOCD enables GDB to connect to the target microcontroller, allowing developers to interact with and debug their code. The program also supports in-system programming, allowing users to flash the firmware onto the memory of the microcontroller. This is essential for updating or loading new firmware onto the device during the development and debugging process, however it is also possible to start debugging without flashing in new software, which is ideal for our case as the flashing process for this project is non-trivial due to the two cores.
+OpenOCD acts as a GDB (GNU Debugger) server, providing a standardized interface for debugging tools. GDB is a full fledged debugger but only its server part is used in this configuration. OpenOCD enables GDB to connect to the target microcontroller, allowing developers to interact with and debug their code. The program also supports in-system programming, allowing users to flash the firmware onto the memory of the microcontroller. This is essential for updating or loading new firmware onto the device during the development and debugging process, however it is also possible to start debugging without flashing in new software, which is ideal for our case as the flashing process for this project is non-trivial due to the two cores.
 
 OpenOCD can be integrated with various Integrated Development Environments and toolchains, providing a seamless debugging experience for developers using different development environments. Being an open-source project, it benefits from a vibrant community that contributes to its development and supports a wide range of hardware platforms. It also allows users to customize and extend its functionality based on their specific debugging requirements.
 
@@ -58,7 +58,7 @@ In the previous iteration of this project, a Makefile was added around the Cargo
 
 The \mycode{cargo-make} \cite{CargoMake} project aims to replace the GNU Makefile with a "rusty" alternative. The tool can be installed using cargo with the command \mycode{cargo install cargo make} and then it can be invoked similarly to GNU make \mycode{cargo make <task>}, where a task is similar to a target in a traditional Makefile. Tasks can be described in a file placed at the crate root titled \mycode{Makefile.toml}. Similarly to how the project can be configured, the build related tasks are to be described in a TOML format. Variables can be set in the \mycode{[env]} section, and tasks can be defined in their own sections under the \mycode{tasks} section. Below is a minimal \mycode{Makefile.toml} file which builds a simple Rust project with the \mycode{cargo make} command.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:cargo-task-example},caption={Cargo Make Task Example}]
 [env]
 OUTPUT_FILENAME = "example"
 
@@ -81,7 +81,7 @@ Some tasks have default defines, for example the \mycode{build} task would just 
 
 So far various ways of flashing our software onto the microcontroller were discussed. \mycode{cargo-flash} seemed to be the most fitting for this project, but using tools provided by ST just seemed more convenient. Setting up a cargo makefile made me reevaluate this aspect of the project and take another look at command line utilities so the deployment process could be automated. The fix to the previously mentioned error in \mycode{st-flash} is still not released at the time of writing, \mycode{cargo-flash} seemed to be the only way forward. It is still only able to flash to one core at a time, however at this stage of the project, where we can be sure that soft resetting the microcontroller will guarantee a steady state, single core flashing will be enough. So three more tasks were added to \mycode{Makefile.toml}, one for flashing each core, and a deploy task that combines these two and building the whole project.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:cargo-make-deploy},caption={Cargo Tasks to Flash the MCU}]
     [tasks.deploy0]
     clear=true
     command = "cargo"
