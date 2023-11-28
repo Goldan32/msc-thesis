@@ -177,4 +177,51 @@ In the last section of the \mycode{Dockerfile} all the Rust related tools and to
 
 Even if all these tools can co-exist with other projects on the host, they are conveniently handled by this container, and developers do not need to spend the time of acquiring them one by one. Going through the \mycode{Dockerfile} this way also reveals another advantage. Not only are all the dependencies listed in a clear and concise manner, the way they can be obtained is also described. This makes it easy to understand and recreate the environment which is needed to use a project like this one.
 
-\subsubsection{VSCode DevContainers}
+\subsubsection{VSCode Dev Containers}
+
+In Visual Studio Code a project on a remote server can be opened and edited just like if it were a local project. Docker containers can be treated in a similar way by using the Dev Containers extension. The extension builds the container and runs it, we only need to open the project folder locally in VSCode and issue a command that reopens the project in its container.
+
+How the container is built and opened can be configured in a \mycode{devcontainer.json} file placed in a \mycode{.devcontainer} folder. In this JSON there are some options on how the container can interact with the host system which is important because of debugging.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:devcont-args},caption={VSCode Devcontainer Arguments}]
+	"runArgs": [
+		"--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined",
+		"--privileged",
+		"--network", "host"
+	],
+\end{lstlisting}
+
+Commands can also be provided that run every time the container is built using the VSCode extension. For example, the following command will add the current directory to the safe git directories. This way git commands can freely be issued in the container. Moreover, all the user specific git settings are copied to the container. This means that the name and email are already configured when we start using the container, even the SSH keys are copied so we can push to our repositories.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:devcont-posttart},caption={Post Start Commands and Mounts}]
+	"postStartCommand": [
+		"git config --global --add safe.directory ${containerWorkspaceFolder}"
+	],
+    "mounts": [
+		"source=/dev,target=/dev,type=bind",
+		"source=${localEnv:HOME}/.ssh,target=/home/rustacean/.ssh,type=bind,consistency=cached"
+	]
+\end{lstlisting}
+
+
+After the container is built, all the features of Visual Studio Code are available. This includes a file explorer starting at the project root, an integrated terminal that can navigate the container, the basic text editing features including all the configurations from the host machine, and even extensions. The extensions present on the container can be configured in the \mycode{devcontainer.json} file.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:devcont-ext},caption={List of VSCode Extensions in the Container}]
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "tamasfe.even-better-toml",
+                "rust-lang.rust-analyzer",
+                "serayuzgur.crates",
+                "marus25.cortex-debug",
+                "vadimcn.vscode-lldb",
+                "yzhang.markdown-all-in-one",
+				"ms-azuretools.vscode-docker",
+				"ms-vscode-remote.remote-containers",
+				"ZixuanWang.linkerscript"
+            ],
+        }
+    },
+\end{lstlisting}
+
+Of course many other settings can be configured on this level, but these configurations can support this project well enough.
