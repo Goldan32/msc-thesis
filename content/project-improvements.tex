@@ -120,6 +120,8 @@ Docker is a platform that provides a mean to create and run applications in cont
 
 \subsection{Utilizing Docker in the project}
 
+\subsubsection{Dockerfile}
+
 Using Docker for this project is a two step process. Fist we need to create a Docker image that is able to build, flash, and debug our applications, then we need to configure our editor, VSCode in this case, to work with this container.
 
 To use Docker with a project, we need to place a \mycode{Dockerfile} to the root of it. A \mycode{Dockerfile} is basically a list of instructions on how to build the image. It usually starts with a \mycode{FROM} statement, which signals to the docker engine that our container is derived from another one. In our case it will be derived from the official Rust container. Also the version of this container can be fixed here so the dependencies will not change as newer versions are released to the Docker container store.
@@ -174,3 +176,5 @@ In the last section of the \mycode{Dockerfile} all the Rust related tools and to
 \end{lstlisting}
 
 Even if all these tools can co-exist with other projects on the host, they are conveniently handled by this container, and developers do not need to spend the time of acquiring them one by one. Going through the \mycode{Dockerfile} this way also reveals another advantage. Not only are all the dependencies listed in a clear and concise manner, the way they can be obtained is also described. This makes it easy to understand and recreate the environment which is needed to use a project like this one.
+
+\subsubsection{VSCode DevContainers}
