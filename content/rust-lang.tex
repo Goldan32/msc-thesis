@@ -76,7 +76,7 @@ There are no implicit conversions between types in Rust. If we have a function i
      |
    7 |     print_u32(mynum.into());
      |                    +++++++
-   
+
    For more information about this error, try `rustc --explain E0308`.
 \end{lstlisting}
 
@@ -100,7 +100,7 @@ When we try to reverse the types in our example, C issues a warning about trunca
      |
    7 |     print_u16(mynum.try_into().unwrap());
      |                    ++++++++++++++++++++
-   
+
    For more information about this error, try `rustc --explain E0308`.
 \end{lstlisting}
 

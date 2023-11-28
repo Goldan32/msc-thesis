@@ -76,3 +76,43 @@ dependencies = [ "build" ]
 \end{lstlisting}
 
 Some tasks have default defines, for example the \mycode{build} task would just execute the command \mycode{cargo build}, the \mycode{clear = true} line makes sure that all parts of these default definitions are overwritten. The dependencies field array lists all the tasks that need to be executed before the current one is able to run. These dependencies are evaluated in the listed order. For our purposes, cargo-make is a good replacement of a GNU Makefile, but in reality it lacks one important feature that is present in normal make. Currently all dependent tasks are executed before the current one, even if their output is more recent than its requirements. This is a great advantage of Makefiles and a necessity in every build system. The longest part of the build in this project is still the invocation of \mycode{cargo build} command, which only recompiles files with changes, so the solution is still acceptable in our case. However cargo-make is still being developed continually so upgraded dependency handling may be possible in the near future.
+
+\section{Flashing}
+
+So far various ways of flashing our software onto the microcontroller were discussed. \mycode{cargo-flash} seemed to be the most fitting for this project, but using tools provided by ST just seemed more convenient. Setting up a cargo makefile made me reevaluate this aspect of the project and take another look at command line utilities so the deployment process could be automated. The fix to the previously mentioned error in \mycode{st-flash} is still not released at the time of writing, \mycode{cargo-flash} seemed to be the only way forward. It is still only able to flash to one core at a time, however at this stage of the project, where we can be sure that soft resetting the microcontroller will guarantee a steady state, single core flashing will be enough. So three more tasks were added to \mycode{Makefile.toml}, one for flashing each core, and a deploy task that combines these two and building the whole project.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht]
+    [tasks.deploy0]
+    clear=true
+    command = "cargo"
+    args = [
+        "flash",
+        "--elf",
+        "${ELF_FILE_0}",
+        "--chip",
+        "STM32H745ZITx"
+    ]
+
+    [tasks.deploy1]
+    clear=true
+    command = "cargo"
+    args = [
+        "flash",
+        "--elf",
+        "${ELF_FILE_1}",
+        "--chip",
+        "STM32H745ZITx"
+    ]
+
+    [tasks.deploy]
+    clear = true
+    dependencies = ["all", "deploy0", "deploy1"]
+\end{lstlisting}
+
+Using this configuration both cores of the microcontroller can be updated after building the current state of the project using a single command: \mycode{cargo make deploy}.
+
+\section{Docker Image}
+
+The problem of dependency hell \cite{DependencyHell} usually means that libraries used in our code can be dependent on various versions of each other. However the concept can be expanded to compiler tools and toolchains in an embedded project where, for example, the version of the compiler or debugger could be locked by the manufacturer of the microcontroller. This is especially a problem for developers who are working on multiple projects or hardwares as development tools are sometimes installed system-wide. So what can be the solution when multiple projects collide and their dependencies cannot or hardly co-exist on the same system?
+
+Docker is a platform that provides a mean to create and run applications in containers. Containers are portable, lightweight, and self-sufficient units that encapsulate software and its dependencies. This allows us to use the same tools during development and deployment across multiple systems. In embedded software development all the tools used for compiling, flashing, and debugging our code can be included in the container with the libraries these programs depend on. Until Docker became widespread the only way to do this separation was to create virtual machines for each of our projects. Setting up and building docker containers is much faster than the installation of a virtual machine \cite{VMVsDocker}. Our project does not use significant resources and can sit comfortably on the host operating system with the Docker engine providing the isolation.

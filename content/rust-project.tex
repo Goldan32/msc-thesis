@@ -19,7 +19,7 @@ Rust projects are fairly lightweight compared to projects generated from some ID
     |-- Cargo.toml
     |-- src
         |-- main.rs
-    
+
 \end{lstlisting}
 
 Essentially only 2 files were created. \mycode{Cargo.toml} will hold information about the project, such as its name and version, but it will also list all the dependencies. Build targets can also be defined in this file, it basically fills the role of a "project setting" or "project properties" window from an IDE. This file can be modified by hand and the changes will take effect on the next compilation, but some cargo commands will also modify it automatically. For example a dependency can be added by listing it under the \mycode{[dependencies]} section header and building the project, or by running the \mycode{cargo add <crate>} command, which will automatically list the dependency in the file. Some features can also be defined for these dependencies, the main one being their minimum required version, but soon some other ones will become important when the STM32 related crated will be added.
@@ -55,7 +55,7 @@ With that done, we will need to add some necessary dependencies. As a \mycode{me
     name = "blink"
     version = "0.1.0"
     edition = "2021"
-    
+
     [dependencies]
     cortex-m = "0.7.7"
     cortex-m-rt = "0.7.3"
@@ -256,7 +256,7 @@ It is not a strange thing in Rust that compile time directives look similar to "
                 SEMAPHORE.store(next_core, Ordering::Release);
                 led.set_high();
                 delay.delay_ms(delay_time);
-        
+
                 led.set_low();
                 delay.delay_ms(delay_time);
             }
@@ -269,7 +269,7 @@ It is not a strange thing in Rust that compile time directives look similar to "
                 SEMAPHORE.store(next_core, Ordering::Release);
                 led2.set_high();
                 delay.delay_ms(500_u16);
-        
+
                 led2.set_low();
                 delay.delay_ms(500_u16);
             }
@@ -303,9 +303,9 @@ The last thing we need to do is define a memory section that can be used as a sh
 The microamp framework is in alpha state so it requires the nightly version of the rust toolchain. Besides that, building the project is pretty simple using the \mycode{microamp} command.
 
 \begin{lstlisting}[language=C,frame=single,float=!ht]
-    cargo +nightly microamp --bin blink --release 
+    cargo +nightly microamp --bin blink --release
 \end{lstlisting}
 
 \section{Flashing}
 
-Loading the program onto the MCU is no longer possible using \mycode{cargo-flash} as we now have two binaries after a single build. Images that contain the code for one or both of the cores can be flashed into the MCU using an official GUI tool from ST called CubeProgrammer. Before flashing a tool called \mycode{srec_cat} is used to create a single image from the two core specific outputs. The unified image can then be flashed using the CubeProgrammer program.
+Loading the program onto the MCU is no longer the most convenient using \mycode{cargo-flash} as we now have two binaries after a single build. Images that contain the code for one or both of the cores can be flashed into the MCU using an official GUI tool from ST called CubeProgrammer. Before flashing a tool called \mycode{srec_cat} is used to create a single image from the two core specific outputs. The unified image can then be flashed using the CubeProgrammer program. For a more automated flashing process, ST provides a command line utility called \mycode{st-flash} which is part of the STLink Tools program package /cite{STLinkTools}. However this program runs into an error when a flashing an image that covers the memory region of both cores. This error \cite{STFlashError} is already well documented and its fix will be the part of the next release cycle. Until then the STMCubeProgrammer GUI tool remains the most efficient way of loading our programs onto the microcontroller.
