@@ -32,7 +32,7 @@ Enums and Structs also count as complete types which means that unlike in C, the
 
 While structs behave mostly the same way as structs in C or classes in C++, enums are different from these common languages. For example an enum could be created for the purpose of representing color encoding types: RGB and hex codes.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-enum},caption={Rust Enum Example}]
     enum ColorFormat {
         RGB,
         HexCode
@@ -41,7 +41,7 @@ While structs behave mostly the same way as structs in C or classes in C++, enum
 
 In Rust we can go further, and attach relevant data directly to the enum values.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-enum-advanced},caption={Rust Enum Example With Data}]
     enum ColorFormat {
         RGB(u8, u8, u8),
         HexCode(String)
@@ -58,7 +58,7 @@ These are the types where ownership and references are important questions. A go
 
 There are no implicit conversions between types in Rust. If we have a function in C that expects a \mycode{uint32\_t} as an argument and we try to pass it a variable of \mycode{uint16\_t} type, we may not even get a warning from the compiler and certainly not an error, as implicit type conversion is a part of C and C++. In Rust however, passing a \mycode{u16} type variable to a function that expects the \mycode{u32} type will result in a compile error. The compiler signals this inconsistency and suggests a solution.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-conv-error},caption={Rust Type Conversion Error}]
     error[E0308]: mismatched types
     --> src/main.rs:7:15
      |
@@ -82,7 +82,7 @@ There are no implicit conversions between types in Rust. If we have a function i
 
 When we try to reverse the types in our example, C issues a warning about truncating integers, but still many programmers can just ignore this warning and assume the data is properly sanitized. Rust obviously will not let a code compile with integer truncation, but the solution is a bit more complex this time, because a possibility is present that the value does not fit in the smaller type.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-reverse-conv-error},caption={Rust Type Conversion Error}]
     error[E0308]: mismatched types
     --> src/main.rs:7:15
      |
@@ -106,7 +106,7 @@ When we try to reverse the types in our example, C issues a warning about trunca
 
 In this case the compiler suggests that we use \mycode{.unwrap\(\)}, which terminates the program if the previous function in the chain returned an error. However it is also possible to branch from the error, do something with the provided value and then even try to convert again to the smaller type, for example this would be one way to implement integer saturation.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-cap-integer},caption={Branching from an Error}]
     fn print_u16(num: u16) {
         println!("{num}");
     }
