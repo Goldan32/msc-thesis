@@ -59,20 +59,20 @@ In the previous iteration of this project, a Makefile was added around the Cargo
 The \mycode{cargo-make} \cite{CargoMake} project aims to replace the GNU Makefile with a "rusty" alternative. The tool can be installed using cargo with the command \mycode{cargo install cargo make} and then it can be invoked similarly to GNU make \mycode{cargo make <task>}, where a task is similar to a target in a traditional Makefile. Tasks can be described in a file placed at the crate root titled \mycode{Makefile.toml}. Similarly to how the project can be configured, the build related tasks are to be described in a TOML format. Variables can be set in the \mycode{[env]} section, and tasks can be defined in their own sections under the \mycode{tasks} section. Below is a minimal \mycode{Makefile.toml} file which builds a simple Rust project with the \mycode{cargo make} command.
 
 \begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:cargo-task-example},caption={Cargo Make Task Example}]
-[env]
-OUTPUT_FILENAME = "example"
+    [env]
+    OUTPUT_FILENAME = "example"
 
-[tasks.build]
-clear = true,
-command = "cargo"
-args = [
-    "build",
-    "--bin", "${OUTPUT_FILENAME}"
-]
+    [tasks.build]
+    clear = true,
+    command = "cargo"
+    args = [
+        "build",
+        "--bin", "${OUTPUT_FILENAME}"
+    ]
 
-[tasks.default]
-clear = true,
-dependencies = [ "build" ]
+    [tasks.default]
+    clear = true,
+    dependencies = [ "build" ]
 \end{lstlisting}
 
 Some tasks have default defines, for example the \mycode{build} task would just execute the command \mycode{cargo build}, the \mycode{clear = true} line makes sure that all parts of these default definitions are overwritten. The dependencies field array lists all the tasks that need to be executed before the current one is able to run. These dependencies are evaluated in the listed order. For our purposes, cargo-make is a good replacement of a GNU Makefile, but in reality it lacks one important feature that is present in normal make. Currently all dependent tasks are executed before the current one, even if their output is more recent than its requirements. This is a great advantage of Makefiles and a necessity in every build system. The longest part of the build in this project is still the invocation of \mycode{cargo build} command, which only recompiles files with changes, so the solution is still acceptable in our case. However cargo-make is still being developed continually so upgraded dependency handling may be possible in the near future.
@@ -113,6 +113,64 @@ Using this configuration both cores of the microcontroller can be updated after 
 
 \section{Docker Image}
 
+\subsection{Docker introduction}
 The problem of dependency hell \cite{DependencyHell} usually means that libraries used in our code can be dependent on various versions of each other. However the concept can be expanded to compiler tools and toolchains in an embedded project where, for example, the version of the compiler or debugger could be locked by the manufacturer of the microcontroller. This is especially a problem for developers who are working on multiple projects or hardwares as development tools are sometimes installed system-wide. So what can be the solution when multiple projects collide and their dependencies cannot or hardly co-exist on the same system?
 
 Docker is a platform that provides a mean to create and run applications in containers. Containers are portable, lightweight, and self-sufficient units that encapsulate software and its dependencies. This allows us to use the same tools during development and deployment across multiple systems. In embedded software development all the tools used for compiling, flashing, and debugging our code can be included in the container with the libraries these programs depend on. Until Docker became widespread the only way to do this separation was to create virtual machines for each of our projects. Setting up and building docker containers is much faster than the installation of a virtual machine \cite{VMVsDocker}. Our project does not use significant resources and can sit comfortably on the host operating system with the Docker engine providing the isolation.
+
+\subsection{Utilizing Docker in the project}
+
+Using Docker for this project is a two step process. Fist we need to create a Docker image that is able to build, flash, and debug our applications, then we need to configure our editor, VSCode in this case, to work with this container.
+
+To use Docker with a project, we need to place a \mycode{Dockerfile} to the root of it. A \mycode{Dockerfile} is basically a list of instructions on how to build the image. It usually starts with a \mycode{FROM} statement, which signals to the docker engine that our container is derived from another one. In our case it will be derived from the official Rust container. Also the version of this container can be fixed here so the dependencies will not change as newer versions are released to the Docker container store.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:from-rust},caption={Deriving from Rust Container}]
+    FROM Rust:1.72
+\end{lstlisting}
+
+While having a Rust container is convenient it will not be enough for this project, it needs to be extended with other external programs. Because the Rust container is itself derived from a version of a Debian container, we can use \mycode{apt-get} to install additional programs into our container.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:docker-apt},caption={Installing External Dependencies}]
+    RUN apt-get update && apt-get install -y \
+        libudev-dev \
+        gdb-multiarch \
+        picocom \
+        openocd \
+        stlink-tools \
+        xxd \
+        binutils-arm-none-eabi \
+        srecord
+
+    # Cleaning up to reduce image size
+    RUN apt-get autoremove -y
+    RUN apt-get clean -y
+    RUN apt-get autoclean -y
+
+    RUN ln -s /usr/bin/gdb-multiarch /usr/bin/arm-none-eabi-gdb
+\end{lstlisting}
+
+Out of these programs, \mycode{libudev-dev}, \mycode{stlink-tools}, \mycode{openocd}, and \mycode{gdb-multiarch} are used for debugging, while the rest of the programs help during image conversion making binary and HEX files, or in the case of \mycode{srecord} combining two HEX files. A program that can handle serial connections, \mycode{picocom} is also provided as most of the time the easiest way to detect an error is through serial traces.
+
+The rest of the \mycode{apt-get} commands are there to remove any unneeded byproducts that could have entered the system during the previous installation phase. Also, the VSCode debugging interface will search for gdb with deprecated naming (\mycode{gdb-arm-none-eabi-gdb}) so a soft link is created to the correct executable (\mycode{gdb-multiarch}).
+
+Next, the user of this container needs to be created. Later, when the container will be started, some user specific settings and configurations will be transferred into the container from the host machine so we need to create a home directory for the user of the container.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:docker-user},caption={Creating a User for the Container}]
+    RUN useradd --create-home --shell /bin/bash rustacean
+    USER rustacean
+\end{lstlisting}
+
+In the last section of the \mycode{Dockerfile} all the Rust related tools and toolchains are installed using \mycode{cargo} and \mycode{rustup}. As discussed before this project not only needs an arm target to be installed, it also needs the nightly release otherwise some crucial features of the compiler will not work and some crates will break.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:docker-cargo},caption={Installing Rust Specific Tools in the Container}]
+    RUN rustup component add llvm-tools-preview
+    RUN rustup target add thumbv7em-none-eabihf
+    RUN rustup install nightly
+    RUN rustup +nightly target add thumbv7em-none-eabihf
+    RUN cargo install cargo-binutils --vers 0.3.6
+    RUN cargo install cargo-flash
+    RUN cargo install microamp-tools --git https://github.com/rtfm-rs/microamp
+    RUN cargo install cargo-make
+\end{lstlisting}
+
+Even if all these tools can co-exist with other projects on the host, they are conveniently handled by this container, and developers do not need to spend the time of acquiring them one by one. Going through the \mycode{Dockerfile} this way also reveals another advantage. Not only are all the dependencies listed in a clear and concise manner, the way they can be obtained is also described. This makes it easy to understand and recreate the environment which is needed to use a project like this one.
