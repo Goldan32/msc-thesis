@@ -249,9 +249,9 @@ With these variables the semaphore can now be locked and unlocked. Unlocking aut
     SEMAPHORE.store(next_core, Ordering::Release);
 \end{lstlisting}
 
-To protect a resource a simple critical section can be created. The critical section is enforced by a shared variable similar to the previously described semaphore. The resource guarded with this variable can be accessed by the same core multiple times in a row.
+To protect a resource a simple mutex can be created. The mutex is enforced by a shared variable similar to the previously described semaphore. The resource guarded with this variable can be accessed by the same core multiple times in a row.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-critical1},caption={Critical Section For a Variable}]
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-mutex1},caption={Mutex For a Variable}]
     const UNLOCKED: u8 = 0;
     const LOCKED: u8 = 1;
 
@@ -259,23 +259,23 @@ To protect a resource a simple critical section can be created. The critical sec
     static mut CURRENT_VOLTAGE: f32 = 0.0;
 
     #[shared]
-    static CRITICAL: AtomicU8 = AtomicU8::new(UNLOCKED);
+    static MUTEX: AtomicU8 = AtomicU8::new(UNLOCKED);
 \end{lstlisting}
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-critical2},caption={Performing a Read Operation in a Critical Section}]
-    while CRITICAL
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-mutex2},caption={Performing a Read Operation Using a Mutex}]
+    while MUTEX
     .compare_exchange(UNLOCKED, LOCKED, Ordering::AcqRel, Ordering::Relaxed)
     .is_err()
     {}
 
-    // CRITICAL SECTION START
+    // MUTEX TAKEN
     let display_voltage;
     unsafe {
         display_voltage = CURRENT_VOLTAGE;
     }
 
-    CRITICAL.store(UNLOCKED, Ordering::Release);
-    // CRITICAL SECTION END
+    MUTEX.store(UNLOCKED, Ordering::Release);
+    // MUTEX GIVEN
 \end{lstlisting}
 
 \subsection{Divergent code}
