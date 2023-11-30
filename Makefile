@@ -4,9 +4,14 @@ DOCUMENT=thesis
 # Make sure to represent this in gitignore file
 PDF_FOLDER := pdf
 
-.PHONY: all clean
+.PHONY: all clean wordcount
 
-all: xelatex
+all: xelatex wordcount
+
+wordcount: xelatex | $(PDF_FOLDER)
+	pdftotext pdf/thesis.pdf pdf/thesis.txt && \
+	cat pdf/thesis.txt | wc && \
+	rm pdf/thesis.txt
 
 $(PDF_FOLDER):
 	mkdir -p $@

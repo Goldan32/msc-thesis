@@ -274,4 +274,20 @@ TODO: Only if really necessary
 
 \section{Hardware Semaphore}
 
-TODO: Must
+The working mechanism of the hardware semaphores present on the board were already shown in a previous section. In this part I will introduce the programming and software side of the hardware semaphore.
+
+\subsection{Locking and unlocking}
+
+The hardware semaphores of this microcontroller have 2 modes of locking, one step and two step. With the two step method, it is possible to provide a process ID when locking the semaphore so every other process that tries to unlock the semaphore will know which process currently locks it. The COREID, which identifies which core locked the semaphore (ie. 0x03 for the M7, and 0x01 for the M4), is written automatically to the register of the HSEM. This project will not use an operating system or scheduler so the one-step locking process can be used.
+
+Most of the peripherals on this board can be handled using driver functions provided by the \mycode{stm32h7xx-hal} crate. However the HSEM driver is not yet implemented in this crate, it is only part of the underlying \mycode{stm32h7} crate, which mostly only contains register definitions. Therefore part of this project is to write a minimal driver API for the hardware semaphores. It will contain methods for locking, both with the two-step and one-step methods, and unlocking a given semaphore.
+
+TODO: code
+
+\subsection{Interrupts}
+
+The hardware semaphores can be configured in a way that upon unlocking they send an interrupt to one of the cores. This requires the addition of an interrupt configuration method to the API established in the previous section.
+
+TODO: code
+
+After configuring the interrupts for the semaphores, we need to enable interrupts for the correct source, and write an interrupt handler. In this example the interrupt handler toggles an LED when the first hardware semaphore is unlocked.
