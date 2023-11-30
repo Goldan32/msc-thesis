@@ -267,3 +267,11 @@ In Listing~\ref{lst:populate-mutex} the green LED is placed inside the mutex. Th
 The function created in Listing~\ref{lst:toggle-led} can be called from anywhere in the code. Its intended use is to be called from interrupts to signal some behavior that could be hard to notice with a debugger or serial traces. The handling of this variable is happening in an interrupt free context to prevent concurrent read access to the mutex.
 
 Many other variables can be places inside a similar mutex, for example wrapping our tx pin inside one would allow us to print debug traces from anywhere in the code without passing the pin as an argument to functions and interrupt handlers.
+
+\section{Logger}
+
+TODO: Only if really necessary
+
+\section{Hardware Semaphore}
+
+TODO: Must
