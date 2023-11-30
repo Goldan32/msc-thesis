@@ -225,3 +225,45 @@ After the container is built, all the features of Visual Studio Code are availab
 \end{lstlisting}
 
 Of course many other settings can be configured on this level, but these configurations can support this project well enough.
+
+\section{Global Static Objects}
+
+Traditionally embedded development projects use the C language which does not provide much in terms of object abstraction. Structs are just collections of basic types and enums are only additional names for a set of integers interpreted by the preprocessor. Peripheral access is handled in a similar manner, usually following the abstraction path of a peripheral driver function leads through simple macros that represent plain memory addresses. For example calling a theoretical function \mycode{toggle(LED0)} will be translated to writing a given value to a given memory address not by the compiler but by the preprocessor. This seemingly simple difference becomes very important when using Rust. While in C we may have access to any peripheral in any scope by including the correct header, in Rust we have to make sure that the object that the peripheral belongs to is also in scope.
+
+This becomes prevalent when using peripherals from interrupts. Using the previously introduced Register Access Layer would make it possible to use peripherals from within any scope, but we would lose the interface provided by the HAL crate. Rust allows global static variables through mutexes. To use a mutex our project must use either the standard library, or allocators, none of which are possible at this point. Fortunately a mutex that can take the place of an std mutex is part of the \mycode{cortex-m} crate which is already required by this project.
+
+For an example, Listing~\ref{lst:green-led} shows a method on defining a mutex that will be able to hold an object which is able to control the green LED on the development board.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:green-led},caption={Static Mutex for a GPIO Output}]
+    #[shared]
+    static GREEN_LED: Mutex<RefCell<Option<hal::gpio::PB0<Output<PushPull>>>>> =
+        Mutex::new(RefCell::new(None));
+\end{lstlisting}
+
+Notice that this variable is marked \mycode{#[shared]} which means that both cores will have access to it. However as noted by the documentation of the mutex \cite{CortexMMutexDoc} this mutex is not safe to use on multicore systems. The problem can be solved by protecting this mutex with a multicore safe solution, for example one of the previously discussed atomic variables or a hardware semaphore, or simply restricting this variable for single core usage. The latter can be done, for example, by exchanging the \mycode{#[shared]} attribute to \mycode{#[config(core = "0")]} to make this variable only available on the M7 core. Omitting both of these attributes will result in working code as the mutex will be present on both cores, however these variables will not be the same and will be able to cause concurrent access to the same peripheral.
+
+After the creation of the mutex, it also needs to be populated with the correct object, a handler to \mycode{gpiob.PB0} in this case. This can be done after the initialization of the peripheral in the main function of the code on any of the cores in case of a shared mutex.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:populate-mutex},caption={Adding the Handler of the LED to the Mutex}]
+    let gpiob = dp.GPIOB.split(ccdr.peripheral.GPIOB);
+    let mut led_green = gpiob.pb0.into_push_pull_output();
+    free(|cs| {
+        GREEN_LED.borrow(cs).replace(Some(led_green));
+    });
+\end{lstlisting}
+
+In Listing~\ref{lst:populate-mutex} the green LED is placed inside the mutex. This is done in a \mycode{free()} section which provides an interrupt free context, a critical section. This completes the initialization of this LED, it is now ready to be used from anywhere in the code.
+
+\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:toggle-led},caption={A LED Toggle Function}]
+    fn toggle_green_led() {
+        free(|cs| {
+            if let Some(pin) = GREEN_LED.borrow(cs).borrow_mut().as_mut() {
+                pin.toggle();
+            }
+        });
+    }
+\end{lstlisting}
+
+The function created in Listing~\ref{lst:toggle-led} can be called from anywhere in the code. Its intended use is to be called from interrupts to signal some behavior that could be hard to notice with a debugger or serial traces. The handling of this variable is happening in an interrupt free context to prevent concurrent read access to the mutex.
+
+Many other variables can be places inside a similar mutex, for example wrapping our tx pin inside one would allow us to print debug traces from anywhere in the code without passing the pin as an argument to functions and interrupt handlers.
