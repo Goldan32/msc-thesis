@@ -136,13 +136,13 @@ On top of this, calling a function also counts as a variable assignment, as the 
 
 While the concept described previously guarantees a level of memory safety, it is also too strict to use comfortable in a standard programming language. Functions must be able to use variables without invalidating them, this is where references and borrowing come in. When we need to temporarily take ownership of a variable, for example in a function, we say that the variable is borrowed. Borrowing is done using references and reference taking is governed by a few basic principles.
 
-References to a variable can be either mutable or not mutable. A reference needs to be dropped before the original value it referred to is dropped. While a value is borrowed, the original variable does not have ownership of it and can't modify it. A single variable can have either one mutable reference or multiple immutable reference at the same time. By adhering to these basic principles the compiler can guarantee that there will be no memory violations or pointers left dangling during the execution of the program.
+References to a variable can be either mutable or not mutable. A reference needs to be dropped before the original value it referred to is dropped. While a value is borrowed, the original variable does not have ownership of it and cannot modify it. A single variable can have either one mutable reference or multiple immutable reference at the same time. By adhering to these basic principles the compiler can guarantee that there will be no memory violations or pointers left dangling during the execution of the program.
 
 There are also generic types for reference counting variables for cases where we cannot know when a variable will be dropped at compile time. They work similar to \mycode{shared\_ptr} in C++ and cause a little bit of runtime overhead so they are only used when absolutely necessary.
 
 \subsection{Lifetimes}
 
-The lifetime of variables is usually determined by the scope they were created in. This gets increasingly more complicated when introducing heap allocated data and references to that, add in a function that returns a reference to a part of this data and even the compiler can't always infer the correct lifetime of some variables. There is however a way to use lifetime specifiers to connect the lifetime of some variables. Two or more variables with the same lifetime specifiers will always stay active while one of them is active.
+The lifetime of variables is usually determined by the scope they were created in. This gets increasingly more complicated when introducing heap allocated data and references to that, add in a function that returns a reference to a part of this data and even the compiler cannot always infer the correct lifetime of some variables. There is however a way to use lifetime specifiers to connect the lifetime of some variables. Two or more variables with the same lifetime specifiers will always stay active while one of them is active.
 
 \section{Error handling}
 
@@ -162,7 +162,15 @@ In embedded rust where we may not have an underlying OS to handle our program qu
 
 \section{Traits}
 
-TODO
+Rust traits serve as a pivotal feature in the development of embedded systems, particularly when shaping driver interfaces. These traits, similarly to interfaces in other languages, allow for the encapsulation of behavior in a reusable manner. By defining a common set of methods that a type must implement, traits promote code consistency and organization.
+
+In embedded systems, where communication with diverse hardware peripherals is commonplace, traits find a natural application. They provide an elegant and modular approach to crafting interfaces for drivers that interact with sensors, actuators, and communication modules. This abstraction through traits facilitates the concealment of hardware-specific details, thereby enhancing code clarity. It also simplifies the process of replacing or upgrading hardware components without causing widespread code disruption.
+
+Traits in Rust enable the creation of hardware driver interfaces that are portable across different embedded systems. Through the implementation of the same trait for distinct hardware variants, developers can achieve code reuse, fostering adaptability and reducing redundancy.
+
+One notable advantage of this trait system is static dispatch, a crucial consideration in embedded systems where minimizing runtime overhead is essential. Static dispatch ensures that method calls are resolved at compile time, optimizing performance and aligning with the efficiency requirements of embedded environments.
+
+Additionally, the ownership and borrowing system, combined with traits, contribute to enforcing safety guarantees. This aspect is particularly critical in embedded systems, where memory safety and predictable behavior are paramount concerns. By leveraging traits, it is possible to create interfaces that not only promote modular and reusable code but also adhere to principles of safety and performance in resource-constrained environments.
 
 \section{Crates}
 
