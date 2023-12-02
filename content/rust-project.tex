@@ -26,7 +26,7 @@ Essentially only 2 files were created. \mycode{Cargo.toml} will hold information
 
 The other file is the \mycode{main.rs} source file that contains the entry point of the program, a main function. By default, this file contains a basic "Hello World" program, so the project can already be built and ran.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-hello-world},caption={Rust Hello World Porgram}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:rust-hello-world},caption={Rust Hello World Porgram}]
     fn main() {
         println!("Hello, world!");
     }
@@ -67,7 +67,7 @@ The only thing left after this is writing valid code that does something, such a
 
 The first step of writing embedded code is getting rid of the standard library crate and the traditional main function with the \mycode{#![no_std]} and \mycode{#![no_main]} directives. Of course the program will still need an entry point, and that is why the \mycode{cortex-m-rt} crate is included in the project. This crate provides the \mycode{#[entry]} directive that can mark a function as the entry point of the program. It can still be called main, but is must have the following signature.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:embedded-main},caption={Main Function in Embedded Rust}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:embedded-main},caption={Main Function in Embedded Rust}]
     #[entry]
     fn main() -> ! {
         loop {}
@@ -78,7 +78,7 @@ This code snippet describes main as a function that takes no arguments and does 
 
 To make a simple blinking program only two more things are required. First we need to have some method to measure the time between the toggles of an LED, then a function that can actually toggle the LED. The \mycode{cortex-m} crate contains a \mycode{delay\_ms()} function that will insert the appropriate amount of NOP assembly statements to the code to wait at least the specified amount of milliseconds. Interrupts and a timer peripheral could also be used, but at this point we only aim to create a minimal working application and using busy waits is much easier. For the LED-s to work we just need to take the \mycode{GPIOE} peripheral and split it into a structure of pins. Then we take the \mycode{pe1} pin, configure it into push-pull mode and it can be controlled with the \mycode{set\_high()} and \mycode{set\_high()} functions.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:embedded-hello-world},caption={Embedded Hello World (Blink) in Rust}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:embedded-hello-world},caption={Embedded Hello World (Blink) in Rust}]
 #![no_main]
 #![no_std]
 
@@ -167,7 +167,7 @@ To make sure that the reset and vector tables of the second core will be at the 
 
 Finally, a main function can be created for the second core.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:embedded-main2},caption={Main Function of Second Core}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:embedded-main2},caption={Main Function of Second Core}]
     unsafe extern "C" fn main2() -> ! {
     write_reg!(rcc, RCC, AHB4ENR, GPIOBEN: Enabled);
     write_reg!(gpio, GPIOB, MODER, MODER0: Output, MODER14: Output);
@@ -195,7 +195,7 @@ The microamp framework was developed recently as a framework for multicore embed
 
 As already stated, shared variables can be declared the following way.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:shared-variable},caption={Shared Variable Example}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:shared-variable},caption={Shared Variable Example}]
     #[shared]
     static mut SHARED_VAR: u32 = 0;
 \end{lstlisting}
@@ -204,7 +204,7 @@ The attribute does not affect the compile process directly as this variable will
 
 One thing to be aware of with shared variables that are defined this way is that their initial value is only written in memory during the flashing process. Warm or even cold resetting the microcontroller will not set these variables back to their initial values. This is an unintended consequence of optimizations by the compiler. The rest of the optimizations are useful for the project thus turning them off would not be beneficial in the long run. The easy fix to this issue is adding a line which sets this variable to the default value.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:shared-variable2},caption={Shared Variable Example With Default Value}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:shared-variable2},caption={Shared Variable Example With Default Value}]
     #[shared]
     static mut SHARED_VAR: u32 = 0;
     unsafe { SHARED_VAR = 0; }
@@ -216,7 +216,7 @@ As it can be seen in Listing~\ref{lst:share-variable2} accessing these variables
 
 First, we have to declare another shared variable.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-semaphore1},caption={Software Semaphore Variables}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:sw-semaphore1},caption={Software Semaphore Variables}]
     const CORE0: u8 = 0;
     const CORE1: u8 = 1;
     const LOCKED: u8 = 2;
@@ -227,7 +227,7 @@ First, we have to declare another shared variable.
 
 Some constants are also defined to make the example easier to understand. Next, two constant variables are created, but the value of them will differ based on which core we are currently compiling for.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-semaphore2},caption={Software Semaphore Core Specific Variables}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:sw-semaphore2},caption={Software Semaphore Core Specific Variables}]
     let (our_turn, next_core) = if cfg!(core = "0") {
         (CORE0, CORE1)
     } else {
@@ -237,7 +237,7 @@ Some constants are also defined to make the example easier to understand. Next, 
 
 With these variables the semaphore can now be locked and unlocked. Unlocking automatically gives the resource to the other core.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-semaphore3},caption={Software Semaphore Locking and Unlocking}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:sw-semaphore3},caption={Software Semaphore Locking and Unlocking}]
     while SEMAPHORE
         .compare_exchange(our_turn, LOCKED, Ordering::AcqRel, Ordering::Relaxed)
         .is_err()
@@ -251,7 +251,7 @@ With these variables the semaphore can now be locked and unlocked. Unlocking aut
 
 To protect a resource a simple mutex can be created. The mutex is enforced by a shared variable similar to the previously described semaphore. The resource guarded with this variable can be accessed by the same core multiple times in a row.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-mutex1},caption={Mutex For a Variable}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:sw-mutex1},caption={Mutex For a Variable}]
     const UNLOCKED: u8 = 0;
     const LOCKED: u8 = 1;
 
@@ -262,7 +262,7 @@ To protect a resource a simple mutex can be created. The mutex is enforced by a 
     static MUTEX: AtomicU8 = AtomicU8::new(UNLOCKED);
 \end{lstlisting}
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:sw-mutex2},caption={Performing a Read Operation Using a Mutex}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:sw-mutex2},caption={Performing a Read Operation Using a Mutex}]
     while MUTEX
     .compare_exchange(UNLOCKED, LOCKED, Ordering::AcqRel, Ordering::Relaxed)
     .is_err()
@@ -282,7 +282,7 @@ To protect a resource a simple mutex can be created. The mutex is enforced by a 
 
 It is not a strange thing in Rust that compile time directives look similar to "active code" that will actually be translated to machine instructions. This is by design so the code becomes readable on a higher level, however makes the language harder to understand when dealing with low level compilation tasks. In this example project the infinite loop of the application will be fully different for the two cores.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:divergent-code},caption={Example of Diverging Code}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:divergent-code},caption={Example of Diverging Code}]
     loop {
         match () {
             #[cfg(core = "0")]

@@ -32,7 +32,7 @@ Enums and Structs also count as complete types which means that unlike in C, the
 
 While structs behave mostly the same way as structs in C or classes in C++, enums are different from these common languages. For example an enum could be created for the purpose of representing color encoding types: RGB and hex codes.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-enum},caption={Rust Enum Example}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:rust-enum},caption={Rust Enum Example}]
     enum ColorFormat {
         RGB,
         HexCode
@@ -41,7 +41,7 @@ While structs behave mostly the same way as structs in C or classes in C++, enum
 
 In Rust we can go further, and attach relevant data directly to the enum values.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-enum-advanced},caption={Rust Enum Example With Data}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:rust-enum-advanced},caption={Rust Enum Example With Data}]
     enum ColorFormat {
         RGB(u8, u8, u8),
         HexCode(String)
@@ -106,7 +106,7 @@ When we try to reverse the types in our example, C issues a warning about trunca
 
 In this case the compiler suggests that we use \mycode{.unwrap\(\)}, which terminates the program if the previous function in the chain returned an error. However it is also possible to branch from the error, do something with the provided value and then even try to convert again to the smaller type, for example this would be one way to implement integer saturation.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-cap-integer},caption={Branching from an Error}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:rust-cap-integer},caption={Branching from an Error}]
     fn print_u16(num: u16) {
         println!("{num}");
     }
@@ -159,6 +159,10 @@ A typical use-case is when a program tries to open a file. The return value is i
 There is however a point in in error chain where recovery is not possible. This is where we can call the \mycode{panic!} macro, optionally with a message. It will try to empty the stack of our program and exit cleanly, then print some information about where the panic occurred.
 
 In embedded rust where we may not have an underlying OS to handle our program quitting, we usually have to write a separate panic handler function. This most commonly is a single line that directs the processor to go into a HALT state. Sometimes interrupts are also disabled to prevent the system from working in an erroneous state.
+
+\section{Traits}
+
+TODO
 
 \section{Crates}
 

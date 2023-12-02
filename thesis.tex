@@ -40,6 +40,33 @@
 
 \input{include/preamble}
 
+% Define the Rust language for listings
+\lstdefinelanguage{Rust}{
+  sensitive=true,
+  keywords=[1]{as, break, const, continue, crate, else, enum, extern, false, fn, for, if, impl, in, let, loop, match, mod, move, mut, pub, ref, return, self, Self, static, struct, super, trait, true, type, unsafe, use, where, while},
+  keywords=[2]{bool, char, f32, f64, i8, i16, i32, i64, isize, u8, u16, u32, u64, usize, str},
+  keywords=[3]{Some, None, Ok, Err, Result, Option},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]{"},
+  morestring=[b]{'},
+}
+
+% Define your custom style for Rust code
+\lstdefinestyle{customrust}{
+  belowcaptionskip=1\baselineskip,
+  breaklines=true,
+  xleftmargin=\parindent,
+  language=Rust,
+  showstringspaces=false,
+  basicstyle=\footnotesize\ttfamily,
+  keywordstyle=[1]\color{blue},
+  keywordstyle=[2]\color{purple},
+  keywordstyle=[3]\color{orange},
+  commentstyle=\itshape\color{green!40!black},
+  stringstyle=\color{brown},
+}
+
 %--------------------------------------------------------------------------------------
 % Table of contents and the main text
 %--------------------------------------------------------------------------------------
@@ -85,6 +112,7 @@
 \include{content/project-improvements}
 \include{content/application}
 \include{content/evaluation}
+\include{content/acknowledgement}
 %\include{content/latex-tools}
 %\include{content/thesis-format}
 %\include{content/template-usage}
