@@ -8,7 +8,7 @@ Establishing a serial connection between the target MCU and the host PC is usual
 
 The following code brings up the UART interface that is linked to the ST-Link connector on the board. In this project, this UART interface is used for debugging purposes, so only the rx line is not in use. Rust generates warnings for variables that are not used, this can be avoided by prepending an underscore to the unused variable. The serial line is configured to operate with 19200 baudrate and without flow control.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:uart-bringup},caption={UART Interface Configuration}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:uart-bringup},caption={UART Interface Configuration}]
     let tx = gpiod.pd8.into_alternate();
     let _rx = gpiod.pd9.into_alternate();
     let serial = dp
@@ -234,7 +234,7 @@ This becomes prevalent when using peripherals from interrupts. Using the previou
 
 For an example, Listing~\ref{lst:green-led} shows a method on defining a mutex that will be able to hold an object which is able to control the green LED on the development board.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:green-led},caption={Static Mutex for a GPIO Output}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:green-led},caption={Static Mutex for a GPIO Output}]
     #[shared]
     static GREEN_LED: Mutex<RefCell<Option<hal::gpio::PB0<Output<PushPull>>>>> =
         Mutex::new(RefCell::new(None));
@@ -244,7 +244,7 @@ Notice that this variable is marked \mycode{#[shared]} which means that both cor
 
 After the creation of the mutex, it also needs to be populated with the correct object, a handler to \mycode{gpiob.PB0} in this case. This can be done after the initialization of the peripheral in the main function of the code on any of the cores in case of a shared mutex.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:populate-mutex},caption={Adding the Handler of the LED to the Mutex}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:populate-mutex},caption={Adding the Handler of the LED to the Mutex}]
     let gpiob = dp.GPIOB.split(ccdr.peripheral.GPIOB);
     let mut led_green = gpiob.pb0.into_push_pull_output();
     free(|cs| {
@@ -254,7 +254,7 @@ After the creation of the mutex, it also needs to be populated with the correct 
 
 In Listing~\ref{lst:populate-mutex} the green LED is placed inside the mutex. This is done in a \mycode{free()} section which provides an interrupt free context, a critical section. This completes the initialization of this LED, it is now ready to be used from anywhere in the code.
 
-\begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:toggle-led},caption={A LED Toggle Function}]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:toggle-led},caption={A LED Toggle Function}]
     fn toggle_green_led() {
         free(|cs| {
             if let Some(pin) = GREEN_LED.borrow(cs).borrow_mut().as_mut() {
@@ -268,10 +268,6 @@ The function created in Listing~\ref{lst:toggle-led} can be called from anywhere
 
 Many other variables can be places inside a similar mutex, for example wrapping our tx pin inside one would allow us to print debug traces from anywhere in the code without passing the pin as an argument to functions and interrupt handlers.
 
-\section{Logger}
-
-TODO: Only if really necessary
-
 \section{Hardware Semaphore}
 
 The working mechanism of the hardware semaphores present on the board were already shown in a previous section. In this part I will introduce the programming and software side of the hardware semaphore.
@@ -280,9 +276,23 @@ The working mechanism of the hardware semaphores present on the board were alrea
 
 The hardware semaphores of this microcontroller have 2 modes of locking, one step and two step. With the two step method, it is possible to provide a process ID when locking the semaphore so every other process that tries to unlock the semaphore will know which process currently locks it. The COREID, which identifies which core locked the semaphore (ie. 0x03 for the M7, and 0x01 for the M4), is written automatically to the register of the HSEM. This project will not use an operating system or scheduler so the one-step locking process can be used.
 
-Most of the peripherals on this board can be handled using driver functions provided by the \mycode{stm32h7xx-hal} crate. However the HSEM driver is not yet implemented in this crate, it is only part of the underlying \mycode{stm32h7} crate, which mostly only contains register definitions. Therefore part of this project is to write a minimal driver API for the hardware semaphores. It will contain methods for locking, both with the two-step and one-step methods, and unlocking a given semaphore.
+Most of the peripherals on this board can be handled using driver functions provided by the \mycode{stm32h7xx-hal} crate. However the HSEM driver is not yet implemented in this crate, it is only part of the underlying \mycode{stm32h7} crate, which mostly only contains register definitions. Therefore part of this project is to write a driver API for the hardware semaphores. It shall contain most of the methods implemented by ST in their C language firmware.\cite{HsemCCode}
 
-TODO: code
+As the first step of the implementation, I defined an interface based on the official HAL driver. In Rust traits can be used to describe shared behavior. In this case however they are used as a tool that can extend the functionality of an existing type without modifying the underlying crate, which is the \mycode{stm32h7} crate in this case.
+
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:todolabel},caption={todocaption},style=customrust]
+    pub trait Hsem {
+        fn release(&self, sem_id: usize) -> Result<(), Error>;
+        fn lock(&self, sem_id: usize, proc_id: u8) -> Result<u32, Error>;
+        fn fast_lock(&self, sem_id: usize) -> Result<u32, Error>;
+        fn is_taken(&self, sem_id: usize) -> Result<bool, Error>;
+        fn release_all(&self, key: u16);
+        fn set_clear_key(&self, key: u16);
+        fn get_clear_key(&self) -> u16;
+        fn enable_interrupt(&self, sem_mask: u32);
+        fn disable_interrupt(&self, sem_mask: u32);
+    }
+\end{lstlisting}
 
 \subsection{Interrupts}
 
