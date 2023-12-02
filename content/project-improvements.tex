@@ -272,7 +272,7 @@ Many other variables can be places inside a similar mutex, for example wrapping 
 
 The working mechanism of the hardware semaphores present on the board were already shown in a previous section. In this part I will introduce the programming and software side of the hardware semaphore.
 
-\subsection{Locking and unlocking}
+\subsection{Implementation}
 
 The hardware semaphores of this microcontroller have 2 modes of locking, one step and two step. With the two step method, it is possible to provide a process ID when locking the semaphore so every other process that tries to unlock the semaphore will know which process currently locks it. The COREID, which identifies which core locked the semaphore (ie. 0x03 for the M7, and 0x01 for the M4), is written automatically to the register of the HSEM. This project will not use an operating system or scheduler so the one-step locking process can be used.
 
@@ -280,7 +280,7 @@ Most of the peripherals on this board can be handled using driver functions prov
 
 As the first step of the implementation, I defined an interface based on the official HAL driver. In Rust traits can be used to describe shared behavior. In this case however they are used as a tool that can extend the functionality of an existing type without modifying the underlying crate, which is the \mycode{stm32h7} crate in this case.
 
-\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:todolabel},caption={todocaption},style=customrust]
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:hsem-trait-def},caption={HSEM Trait Definition},style=customrust]
     pub trait Hsem {
         fn release(&self, sem_id: usize) -> Result<(), Error>;
         fn lock(&self, sem_id: usize, proc_id: u8) -> Result<u32, Error>;
@@ -294,10 +294,110 @@ As the first step of the implementation, I defined an interface based on the off
     }
 \end{lstlisting}
 
+This trait can serve as a skeleton of our driver, it lists a header for every method we need to define. The most important ones are the two locking and the release function, the rest of them are implemented in a similar way to these three. The implementation uses a register access interface which defines \mycode{read()}, \mycode{write()}, and \mycode{modify()} methods for objects implementing the corresponding traits.
+
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:hsem-impl},caption={HSEM Method Implementations}]
+    impl Hsem for stm32h7xx_hal::stm32::HSEM {
+        fn release(&self, sem_id: usize) -> Result<(), Error> {
+            if sem_id > 31 {
+                Err(Error::InvalidHsemIndex)
+            } else {
+                self.r[sem_id].write(|w| unsafe { w
+                    .procid().bits(0)
+                    .masterid().bits(get_core_id())
+                    .lock().bit(false)});
+                Ok(())
+            }
+        }
+
+        fn lock(&self, sem_id: usize, proc_id: u8) -> Result<u32, Error> {
+            if sem_id > 31 {
+                Err(Error::InvalidHsemIndex)
+            } else {
+                self.r[sem_id].write(|w| unsafe { w
+                    .procid().bits(proc_id)
+                    .masterid().bits(get_core_id())
+                    .lock().bit(true)});
+                Ok(self.r[sem_id].read().bits())
+            }
+        }
+
+        fn fast_lock(&self, sem_id: usize) -> Result<u32, Error> {
+            if sem_id > 31 {
+                Err(Error::InvalidHsemIndex)
+            } else {
+                Ok(self.rlr[sem_id].read().bits())
+            }
+        }
+
+        // ...
+    }
+\end{lstlisting}
+
+The listing above is the implementation of the important methods in this driver. Aside from some light error handling regarding the semaphore index, it is basically reading and writing certain registers. The \mycode{release()} method writes 0 into the PROCID and LOCK parts of the selected HSEM register, the MASTERID is filled with a core specific value which is decided during compilation.
+
+The \mycode{lock()} method implements the two-step locking method thus its signature contains a PROCID parameter besides the index of the selected semaphore. In the first step the PROCID, MASTERID, and LOCK parts of the register are set. This can be done atomically but at this point we also require confirmation that the locking was successful so the register content is read back and returned. Similarly to the original implementation by ST this value needs to be checked for correctness on the caller side.
+
+Using the \mycode{fast_lock()} method on the caller side is akin to the normal \mycode{lock()} method in a sense that the return value needs to be checked to confirm a successful lock. However as there are no process ID-s with these mechanism, only the lock bit and the MASTERID fields need to be checked. The inner workings of this method are quite different, only a read is required, but to a different address. The Read Lock Register (RLR) has a different address than the normal register but belongs to the same physical memory. This distinction signals to the AHB bus master that it should fill in the MASTERID field because the software will not be able to, using this method.
+
+The get \mycode{get_core_id} function can be published from this mod so users of this interface may use it to check results. With the correct optimization settings, this function should compile into a single variable based on the core the code is compiled to. This behavior can also be forced with the attribute \mycode{#[inline(always)]}.
+
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:get-core-id},caption={The \mycode{get_core_id()} funtion}]
+    #[inline(always)]
+    pub fn get_core_id() -> u8 {
+        if cfg!(core = "0") {
+            0x03
+        } else {
+            0x01
+        }
+    }
+\end{lstlisting}
+
+\subsection{Usage}
+
+Using the hardware semaphores is pretty straightforward after previously defining an interface, but some extra steps are also required. First, we must enable the clock signal for the HSEM peripheral, which is off by default. This can most easily be done by accessing the proper register and setting the correct bit to one. Now the semaphores are physically functional but in the code a reference to them needs to be created, through which we are able to call the previously implemented methods, or access the HSEM registers.
+
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:hsem-demo},caption={Demonstration of HSEM Usage}]
+    // Enable HSEM clk
+    dp.RCC.ahb4enr.modify(|_, w| w.hsemen().set_bit());
+
+    let hsem = &dp.HSEM;
+    let _ = hsem.fast_lock(0);
+    hsem.release(0)
+\end{lstlisting}
+
+Listing~\ref{lst:hsem-demo} demonstrates how to lock and unlock a hardware semaphore. During proper usage the return value of \mycode{fast_lock()} would need to be checked to confirm that the semaphore was indeed taken by the current core and not the other one. This problem is non-existent in single core applications.
+
 \subsection{Interrupts}
 
-The hardware semaphores can be configured in a way that upon unlocking they send an interrupt to one of the cores. This requires the addition of an interrupt configuration method to the API established in the previous section.
+The hardware semaphores can be configured in a way that upon unlocking they send an interrupt to one of the cores. The original driver API implements methods to enable and disable interrupts for certain semaphores so it was ported here too. To setup interrupt we first need to enable HSEM interrupts globally, and then select the semaphores to be monitored with the \mycode{enable_interrupt()} method. This method takes a 32-bit integer and treats it as a mask, for example if the LSB is set and all other bits are zero then interrupts will only be generated when the hardware semaphore with the index zero is unlocked.
 
-TODO: code
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:interrupt-hsem-conf},caption={Enabling a HSEM Interrupt}]
+    unsafe { NVIC::unmask(hal::stm32::Interrupt::HSEM0); }
+    hsem.enable_interrupt(0x01);
+\end{lstlisting}
 
-After configuring the interrupts for the semaphores, we need to enable interrupts for the correct source, and write an interrupt handler. In this example the interrupt handler toggles an LED when the first hardware semaphore is unlocked.
+Another thing that needs to be set up is the interrupt handler. It can be defined by creating a function without parameters or return value called the same as the interrupt source and marking it with the \mycode{#[interrupt]} attribute. The implementation of such a function should follow all the common rules an interrupt handler usually follows. For example, it should clear its interrupt flag and exit promptly after serving its short and concise functionality.
+
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:interrupt-hsem-ex},caption={An Example HSEM Interrupt Handler}]
+    #[interrupt]
+    fn HSEM0() {
+        let status = hsem.misr.read().bits();
+        hsem.disable_interrupt(status)
+        hsem.icr.modify(|r, w| unsafe { w.bits(r & !status) });
+        toggle_green_led();
+    }
+\end{lstlisting}
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/hsem-interrupt.png}
+    \caption{HSEM Interrupt State Diagram\cite{HsemInterrupt}}
+    \label{fig:hsem-interrupt-sd}
+\end{figure}
+
+As an example, Listing~\ref{lst:interrupt-hsem-ex} shows the implementation of an interrupt handler that toggles an LED when any HSEM interrupt is trigerred. There is only one source of interrupt for this peripheral, so one interrupt handler must serve the interrupts coming from all the semaphores. In the interrupt handler we first query the list of masked freed semaphores then disable interrupt and finally clear the interrupt flags. After these steps, the interrupt handler can provide its normal functionality, which in this case is just toggling an LED.
+
+\subsection{Limitations}
+
+Dual-core functionality is not supported in underlying crates, only one of the two interrupt lines can be used. As one interrupt line is connected to each of the two cores, this means that through correct and safe code we are only able to handle HSEM interrupts on the M7 core.
