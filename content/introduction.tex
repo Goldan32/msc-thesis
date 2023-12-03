@@ -10,4 +10,6 @@ During the first part of the project, I will examine how the 2 cores of this MCU
 
 While creating the Rust skeleton project, I will research and document the current status of multi-core Rust development and existing solutions. Then I will discuss the possibilities of setting up a dual-core project for this specific microcontroller, and select one that is most appropriate for my task.
 
-Using the selected method and framework, I will test if the capabilities present in a C project could still be used in the new Rust system. If everything is in order, I will create an example dual-core application based on the Rust project skeleton. This will be the second part of this project.
+Using the selected method and framework, I will test if the capabilities present in a C project could still be used in the new Rust system. If everything is in order, I will create an example dual-core application based on the Rust project skeleton. During the development of the application I will implement features necessary for multicore systems such as the hardware semaphores. I will also implement features that make development easier, eg. Debugger or Containerization.
+
+The example application will focus on exploring the usage of simple peripherals, for example UART or GPIO, and a non-trivial one, ethernet. While I aim to use the cores for different tasks, they will be able to trade information in a safe manner.
