@@ -8,13 +8,15 @@
 %----------------------------------------------------------------------------
 \chapter*{Kivonat}\addcontentsline{toc}{chapter}{Kivonat}
 
-A jelenleg a legelterjedtebb rendszer programozási nyelvek (C/C++) elavultnak tekinthetők, mind biztonságos memóriakezelés, mind modern nyelvi elemek tekintetében. A Rust programozási nyelv megoldást kínál ezen nyelvek sok gyakori problémájára, úgy mint a memóriaszivárgások vagy a nem egységes hibakezelés. A fejlesztők körében is egyre elfogadottabb a nyelv, például még a Linux Kernelben is támogatást kapott, a C nyelv után elsőként.\cite{FirstRustCommit}
+A jelenleg a legelterjedtebb rendszer programozási nyelvek (C/C++) bizonyos megfontolások mentén elavultnak tekinthetők, mind biztonságos memóriakezelés, mind modern nyelvi elemek tekintetében. A Rust programozási nyelv megoldást kínál ezen nyelvek sok gyakori problémájára, úgy mint a memóriaszivárgások vagy a nem egységes hibakezelés. A fejlesztők körében is egyre elfogadottabb a nyelv, például még a Linux Kernelben is támogatást kapott, a C nyelv után elsőként.\cite{FirstRustCommit}
 
 Ezen kívül egyre több olyan beágyazott rendszer készül, melynek igényeit a legjobban egy többmagos mikrokontroller tudja kielégíteni. A legtöbb nagy gyártó egymagos, mikrokontrollereire már lehet Rust kódból binárist fordítani, azonban többmagos kontrollerek esetében már nem ilyen széles körű a támogatás. Így adott a feladat, hogy a létező többmagos Rust keretrendszereket adaptáljuk az általunk választott többmagos mikrokontrollerhez.
 
 A dolgozat célja, hogy feltérképezze a mikrokontrollerek Rust támogatását, és azt, hogy ez a támogatás hogyan adaptálható többmagos esetekre. Megvizsgálom a többmagos működésére jellemző elemek, mint például szemaforok és üzenetsorok használatát Rust programozási nyelven. Megismerkedek a már rendelkezésre álló megoldásokkal, és adaptálok egyet a kiválasztott többmagos mikrokontrollerre. Végül összehasonlítást végzek egy megszokott C nyelvű többmagos és egy többmagos Rust projekt között.
 
 Egy projekt váz elkészítése után pedig egy többmagos példaalkalmazás készítésével fogom demonstrálni a többmagos Rust lehetőségeit. A fejlesztés során az STM32H745 chip-pel felszerelt Nucleo-H745 fejlesztői kártyát fogom használni, melyen egy Arm Cortex-M7 és egy Cortex-M4 mag található.
+
+A példaalkalmazás keretében a Cortex-M7 mag egy egyszerű webszervert fog megvalósítani és az ethernet periférián keresztül fog csatlakozni egy helyi hálózatra. A Cortex-M4 mag digitális szűrést fog végrehajtani a mikrokontroller egyik analóg bemenetén érkező jelfolyamra és egy analóg kimenetén fogja szolgáltatni ennek eredményét. A szűrés paramétereit a webszerver által hosztolt oldalon lehet majd beállítani. A két mag biztonságos adatcseréjét hardveres szemafor fogja lehetővé tenni.
 
 \vfill
 \selectenglish
@@ -32,6 +34,8 @@ More and more embedded systems are made with features that are best satisfied by
 The purpose of this thesis is to explore the Rust support of microcontrollers, and the adaptation of this support for multi-core ones. I will examine the Rust usage of features prevalent in a multi-core system, such as semaphores and message queues. I will also explore the currently available rust multi-core solutions and adapt one of them to a selected multi-core microcontroller. Finally I will compare the advantages and disadvantages of the selected framework with a tried and tested C language project structure.
 
 After creating a Rust project skeleton, an example multi-core application will also be developed. During the task, I will use the Nucleo-H745 development board, which has an STM32H45 chip. This chip has an ARM Cortex-M7 and a Cortex-M4 core.
+
+In the example application the Cortex-M7 core will serve as a simple webserver using the ethernet peripheral of the board to connect to a local network. The Cortex-M4 core is going to perform filtering on a signal stream coming through one of the analog pins of the microcontroller, while an analog output will be used to show the result. The parameters of the filtering are going to be configurable from the site hosted by the webserver. The safe data flow between the two cores will be guaranteed by a hardware semaphore.
 
 
 \vfill
