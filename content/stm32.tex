@@ -29,6 +29,33 @@ In the default setup the MCU starts with an external clock signal that originate
 
 There are several clock domains which makes it possible to fine tune our application for low power consumption. Configuration code can be generated using official tools from the manufacturer using a GUI application. A maximum frequency of 240 MHz can be achieved for the M7 core and 120 MHz for the M4 core.
 
+\subsection{Analog interfaces}
+
+\subsubsection{Analog Digital Converter}
+
+Almost all modern microcontrollers include some kind of analog to digital converter peripheral and the STM32H745 is not an exception. \cite{ADCDescription} It has three ADC-s where ADC1 and ADC2 are tightly coupled with ADC1 being the master while ADC3 is fully independent. Each ADC consists of a 16-bit successive approximation analog-to-digital converter and has up to 20 multiplexed channels. A/D conversion of the various channels can be performed in single, continuous, scan or discontinuous mode. The result of the conversion is stored in a left-aligned or right-aligned 32-bit data register.
+
+The ADC-s can use a lower resolution than 16 bit to decrease conversion time which is also independent of the AHB bus clock frequency. The ADC-s are capable of self calibration which reduces the complexity of their initialization. The start of a conversion can be initiated either by means of the software calling the applicable driver function, or hardware triggers, ie. interrupts of timer events. They are also capable of sending in interrupt themselves when a conversion is finished.
+
+There are two main modes of using an ADC. The easiest method is using single conversion mode. With this mode, all the channel conversions are started and once these are finished, the results are stored in the appropriate registers and an end of conversion flag is checked. This way a blocking call to an ADC conversion can be easily implemented by waiting for the end of conversion flag to be flipped. The second way is continuous conversion mode. Here, instead of stopping after the conversion is done and the result is placed in a register, the ADC will start this process again. When a conversion is finished it sends an interrupt that the data should be extracted from the register. Not handling this interrupt properly (ie. not saving the content of this register) will not stop the ADC from overwriting the content of the register.
+
+The timing of a conversion can be useful information when designing an application. The elapsed time between the start of a conversion and the end of conversion is the sum of the configured sampling time plus the successive approximation time depending on data resolution can be calculated according to the following formula.
+
+\[T_{CONV} = T_{SMPL} + T_{SAR} = [1.5_{|min} + 7.5_{|14bit}] \times T_{adc\_ker\_ck}\]
+
+\[ T_{CONV} = 62.5 ns_{|min} + 312.5 ns_{|14bit} = 375.0 ns\]
+
+Where $T_{SMPL}$ is the sampling time which depends on the channel and $T_{SAR}$ depends in the resolution. In the formula above $T_{adc\_ker\_ck}$ equals 24 MHz, the resolution is 14 bit, and the lowest possible sampling time is substituted to demonstrate its usage.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/adc-timing.png}
+    \caption{Analog to Digital Conversion Time\cite{ADConversionTime}}
+    \label{fig:adc-timing}
+\end{figure}
+
+\subsubsection{Digital Analog Converter}
+
 \subsection{Connectivity}
 
 \subsubsection{Programming and debugging}
