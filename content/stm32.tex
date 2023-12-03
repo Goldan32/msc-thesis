@@ -47,14 +47,29 @@ The timing of a conversion can be useful information when designing an applicati
 
 Where $T_{SMPL}$ is the sampling time which depends on the channel and $T_{SAR}$ depends in the resolution. In the formula above $T_{adc\_ker\_ck}$ equals 24 MHz, the resolution is 14 bit, and the lowest possible sampling time is substituted to demonstrate its usage.
 
-\begin{figure}[!ht]
+\begin{figure}[H]
     \centering
     \includegraphics[width=150mm, keepaspectratio]{figures/adc-timing.png}
-    \caption{Analog to Digital Conversion Time\cite{ADConversionTime}}
+    \caption{Analog to Digital Conversion Timing\cite{ADConversionTime}}
     \label{fig:adc-timing}
 \end{figure}
 
 \subsubsection{Digital Analog Converter}
+
+The DAC module is a voltage output digital-to-analog converter which can be configured in 8 or 12 bit mode. The DAC module has two output channels, both of them have their own converters. In dual DAC channel mode, conversions could be done independently or simultaneously when both channels are grouped together for synchronous update operations.\cite{DACDescription}
+
+There is one unified interface but two different DAC channels which can work in synchronized or independent modes. The DAC is able to generate noise-wave and triangular waves. They also have capabilities of using the DMA controller for their data buffers, and using external triggers, ie. interrupts or timer events, for conversion is possible as well. The DAC is able to send interrupts to signal buffer underrun when using DMA mode but not in any other case.
+
+When outputting a value, the DOR (Data Out Register) cannot be written directly, it should first be entered into the DHR (Data Hold Register). It is then automatically transferred to the DOR as soon as possible. This transfer is followed by a settling time which is dependent on the power supply voltage and the analog output load.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/dac-timing.png}
+    \caption{Digital to Analog Conversion Timing\cite{DACTime}}
+    \label{fig:adc-timing}
+\end{figure}
+
+In summary, the DAC has fewer features and lesser capabilities than the ADC on this microcontroller.
 
 \subsection{Connectivity}
 
