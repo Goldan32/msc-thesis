@@ -4,12 +4,10 @@
 
 During the first part of this task, a starting project was created that can form the starting point for a more complex multicore application. I explored the multicore solutions of an example C project, and used those principles when creating a Rust implementation. I also explored the capabilities of the hardware and started experimenting with the simpler peripherals using Rust.
 
-The project at this stage is obviously unfinished, but the gathered knowledge and results so far will help kickstart the second part.
+After a minimal project was done I could start experimenting with more advanced features such as configuring a debugger or a Docker container. In this stage other peripherals were configured and tested. I successfully used the ethernet interface from the M7 core to receive and send HTTP requests via TCP. I also implemented a HAL-like driver for the hardware semaphores present on the microcontroller, based on the functionalities of the original driver from the manufacturer.
 
-\section{Further tasks}
+Finally, an example application was created showcasing the capabilities of a multicore microcontroller using Rust.
 
-The most urgent task at hand is using more peripherals with Rust, especially the hardware semaphore as that will be crucial for any multicore application. Also race conditions when accessing common peripherals need to be investigated more thoroughly.
+\section{Development Opportunities}
 
-In the current state of the project, both cores can only use the same crates, which is not really a problem because if a crate is not used at all on one crate just the other, it will be optimized out accordingly. However if both cores want to use the same crate with a different feature set, which is the case with \mycode{stm32h7xx-hal}, that currently is not not possible. As the microamp framework is open source, an extension or modification could be coded that allows for behavior like that.
-
-And finally a more complex application should be developed that can demonstrate multicore capabilities in a life-like scenario. Optionally, a crate could be created with multicore specific little examples that may be published to \mycode{crates.io} for the masses.
+During this project I noticed that multicore support was not in the mind of the developers when planning the Rust support of STM32 microcontrollers. To achieve widespread usage, the first task would be to expand the underlying STM32 support crates with multicore capabilities. Some of the solutions in this project felt like workarounds, but some minor changes to crates buried deeper in the dependency chain would make it easier to create more comfortable solutions. However changing something that many projects depend on is never easy so this type of change would take time and would need widespread support.
