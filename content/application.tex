@@ -327,3 +327,54 @@ If the server is able to send to the client it will write the HTML page into the
 With the connection closed, the job of this core is done and the loop can start again from the beginning with the listening phase.
 
 \subsection{Signal Filtering}
+
+The M7 core of the microcontroller performs low pass filtering based on the coefficients supplied by a user on the webpage hosted by the other core. Samples are also saved in a buffer, and when it becomes full, an average is calculated. After this calculation, the program passes this average to the other core and takes the new values of the alpha and beta coefficients.
+
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:adc-read},caption={Reading and Converting Input Voltage}]
+    let reading: u32 = adc1.read(&mut channel).unwrap();
+    samples[counter] = reading as f32 * (3.3 / adc1.slope() as f32);
+
+    adc_value = samples[counter];
+    filtered_value = alpha * adc_value
+                     + (1.0 - alpha) * prev_filtered_value
+                     + beta * prev_adc_value;
+
+    prev_adc_value = adc_value;
+    prev_filtered_value = filtered_value;
+\end{lstlisting}
+
+Listing~\ref{lst:adc-read} shows how a sample is taken from the ADC. A blocking \mycode{read()} method is called which returns the raw value extracted from the register. This is then turned into a voltage value and stored in a buffer. Then the filtering happens using the two coefficients and the formula already presented previously. Alpha values closer to zero will result in more efficient filtering, meaning the cutoff point will be closer to the lower frequencies.
+
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:dac-set},caption={Setting the DAC Output Value}]
+    let out_value: u16 = if filtered_value < 0.0 { 0 }
+        else if filtered_value > 3.3 { 4095 }
+        else { ((filtered_value /  3.3) * 4096.0) as u16};
+    dac.set_value(out_value);
+    for i in 0..5 {
+        cortex_m::asm::nop();
+    }
+\end{lstlisting}
+
+The output value is calculated by scaling the filtered value to the range of the 12 bit DAC. Also we need to wait here for a couple of cycles according to Figure~{fig:dac-timing} to wait for the output value to settle.
+
+Finally, when the buffer is full, an average voltage is calculated from the input voltages.
+
+\begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:avg-voltage},caption={Calculating the Average Voltage}]
+    let hsem_taken_by_this_core = 0x80000000u32 & ((get_core_id() as u32) << 8);
+    if counter == 1023 {
+        counter = 0;
+        let mut avg = 0f32;
+        for v in samples { avg += v; }
+        avg /= 1024.0;
+        while hsem.fast_lock(0).unwrap() != hsem_taken_by_this_core {}
+        unsafe {
+            display_voltage = SHARED_DATA.voltage;
+            SHARED_DATA.alpha = alpha;
+            SHARED_DATA.beta = beta;
+        }
+        let _ = hsem.release(0);
+    }
+    counter += 1;
+\end{lstlisting}
+
+The part where shared memory is accessed is also guarded by the same hardware semaphore as it was with the other core. Note that \mycode{hsem_taken_by_this_core} is defined in exactly the same format as it was on the other core, but eventually compiles to a different value.
