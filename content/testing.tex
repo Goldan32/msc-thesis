@@ -49,6 +49,53 @@ At around 8 kHz the signal lost its integrity. The shape of the sine wave is sti
 \begin{figure}[H]
     \centering
     \includegraphics[width=150mm, keepaspectratio]{figures/upperlimit-bad.png}
-    \caption{Output of the DAC at 3 kHz}
+    \caption{Output of the DAC at 8 kHz}
     \label{fig:upperlimit-bad}
 \end{figure}
+
+With this information, I started experimenting with the signal filtering. First I created an input, regular white noise added to a sine wave.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/sine-with-error.png}
+    \caption{Samples of the Input Signal}
+    \label{fig:sine-with-error}
+\end{figure}
+
+At first alpha is set to 1.0 and beta is set to 0.0, this configuration bypasses the filter entirely.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/bypass.png}
+    \caption{Output without Filtering}
+    \label{fig:bypass}
+\end{figure}
+
+The input has quite a bit of noise, so we will start experimenting with alpha at 0.2 while beta remains unchanged.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/alpha02.png}
+    \caption{Output with alpha=0.2 and beta=0.0}
+    \label{fig:alpha02}
+\end{figure}
+
+After some experimentation, selecting alpha=0.08 yields the most acceptable results.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/alphaok.png}
+    \caption{Output with alpha=0.08 and beta=0.0}
+    \label{fig:alphaok}
+\end{figure}
+
+The beta coefficient causes the last input sample to be taken into account when calculating the output, which is useful in reducing infrequent spikes, but less so in reducing white noise.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=150mm, keepaspectratio]{figures/beta.png}
+    \caption{Output with alpha=0.2 and beta=0.2}
+    \label{fig:beta}
+\end{figure}
+
+As expected, setting beta=0.2 did not influence the output at all.
