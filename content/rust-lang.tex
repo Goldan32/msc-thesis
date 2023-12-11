@@ -1,12 +1,12 @@
 \chapter{The Rust Programming Language}
 
-This chapter is a brief introduction of the Rust programming language, and its most important features in context of this thesis.
+This chapter is a brief introduction to the Rust programming language and its most important features in the context of this thesis.
 
 \section{A compiled system programming language}
 
-Officially Rust is considered a system programming language which means that its primary function is performance and ease of access to the hardware while still providing higher level programming concepts such as data structures to hold and organize data. \cite{SystemProgrammingLanguageWikipedia} For example, in Rust we can find a dynamic string type, but may also choose to take it as a byte array and manipulate the data that way.
+Officially Rust is considered a system programming language which means that its primary function is performance and ease of access to the hardware while still providing higher-level programming concepts such as data structures to hold and organize data. \cite{SystemProgrammingLanguageWikipedia} For example, in Rust, we can find a dynamic string type, but may also choose to take it as a byte array and manipulate the data that way.
 
-Much like C and C++, Rust programs can only be run after they have been compiled into a binary. The aforementioned higher level concepts only exist at compile time so the binary program can be as efficient as possible. This will be true for all further concepts explained in this section, the resulting binaries from a C and Rust program are comparable both in size and execution speed, its just that the Rust compiler is more sophisticated than the C compiler.
+Much like C and C++, Rust programs can only be run after they have been compiled into a binary. The aforementioned higher-level concepts only exist at compile time so the binary program can be as efficient as possible. This will be true for all further concepts explained in this section, the resulting binaries from a C and Rust program are comparable both in size and execution speed, only, the Rust compiler is more sophisticated than the C compiler.
 
 \section{Type system}
 
@@ -14,7 +14,7 @@ Much like C and C++, Rust programs can only be run after they have been compiled
 
 \subsubsection{Simple types}
 
-These are the very basic types of Rust representing numbers, booleans and characters. Unlike in C, the size of the following types is not implementation dependent.
+These are the very basic types of Rust representing numbers, booleans, and characters. Unlike in C, the size of the following types is not implementation-dependent.
 
 For representing numbers one can use \mycode{u8}, \mycode{u16}, \mycode{u32}, \mycode{u64}, \mycode{u128} and \mycode{usize} for representing unsigned integers, where the last one will use as many bits as the platform the code is compiled for (usually 32 or 64). Exchanging the \mycode{u} for an \mycode{i} in these types gives us the signed integer types.
 
@@ -22,7 +22,7 @@ Floating point numbers can be either stored using the \mycode{f32} or the \mycod
 
 Characters are represented in memory by 4 bytes to accommodate encodings up to UTF-8.
 
-Rust also has a boolean type which is important for control flow, for example the \mycode{if} expression only allows a boolean expression in its header.
+Rust also has a boolean type which is important for control flow, for example, the \mycode{if} expression only allows a boolean expression in its header.
 
 \subsubsection{Enums and Structs}
 
@@ -30,7 +30,7 @@ It is often said that Rust has an algebraic type system. What this mainly refers
 
 Enums and Structs also count as complete types which means that unlike in C, they cannot be represented as their underlying types by clever pointer arithmetics.
 
-While structs behave mostly the same way as structs in C or classes in C++, enums are different from these common languages. For example an enum could be created for the purpose of representing color encoding types: RGB and hex codes.
+While structs behave mostly the same way as structs in C or classes in C++, enums are different from these common languages. For example, an enum could be created to represent color encoding types: RGB and hex codes.
 
 \begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:rust-enum},caption={Rust Enum Example}]
     enum ColorFormat {
@@ -39,7 +39,7 @@ While structs behave mostly the same way as structs in C or classes in C++, enum
     }
 \end{lstlisting}
 
-In Rust we can go further, and attach relevant data directly to the enum values.
+In Rust, we can go further, and attach relevant data directly to the enum values.
 
 \begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:rust-enum-advanced},caption={Rust Enum Example With Data}]
     enum ColorFormat {
@@ -48,15 +48,15 @@ In Rust we can go further, and attach relevant data directly to the enum values.
     }
 \end{lstlisting}
 
-This way when a \mycode{ColorFormat} type is passed to a function, it can determine the incoming color format and also access the color itself. In addition to this, the compiler will check if this function does something with each of the enums it can receive, and fails the compilation if, for example \mycode{HexCode} type of color format is not handled.
+This way when a \mycode{ColorFormat} type is passed to a function, it can determine the incoming color format and also access the color itself. In addition to this, the compiler will check if this function does something with each of the enums it can receive, and fails the compilation if, for example, \mycode{HexCode} type of color format is not handled.
 
 \subsection{Types on the heap}
 
-These are the types where ownership and references are important questions. A good example would be a string, where multiple parts of our code would like to modify or read the value, but ideally we only want one owner that is responsible for freeing up the memory used when the string is not needed anymore. Most of the types that contain data on the heap are part of the standard library of Rust. These include the aforementioned strings and some containers like \mycode{Vector}. How rust handles these data types will be discussed further on.
+These are the types where ownership and references are important questions. A good example would be a string, where multiple parts of our code would like to modify or read the value, but ideally, we only want one owner that is responsible for freeing up the memory used when the string is not needed anymore. Most of the types that contain data on the heap are part of the standard library of Rust. These include the aforementioned strings and some containers like \mycode{Vector}. How Rust handles these data types will be discussed further.
 
 \subsection{Type conversions}
 
-There are no implicit conversions between types in Rust. If we have a function in C that expects a \mycode{uint32\_t} as an argument and we try to pass it a variable of \mycode{uint16\_t} type, we may not even get a warning from the compiler and certainly not an error, as implicit type conversion is a part of C and C++. In Rust however, passing a \mycode{u16} type variable to a function that expects the \mycode{u32} type will result in a compile error. The compiler signals this inconsistency and suggests a solution.
+There are no implicit conversions between types in Rust. If we have a function in C that expects a \mycode{uint32\_t} as an argument and we try to pass it a variable of \mycode{uint16\_t} type, we may not even get a warning from the compiler and certainly not an error, as implicit type conversion is a part of C and C++. In Rust, however, passing a \mycode{u16} type variable to a function that expects the \mycode{u32} type will result in a compile error. The compiler signals this inconsistency and suggests a solution.
 
 \begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-conv-error},caption={Rust Type Conversion Error}]
     error[E0308]: mismatched types
@@ -80,7 +80,7 @@ There are no implicit conversions between types in Rust. If we have a function i
    For more information about this error, try `rustc --explain E0308`.
 \end{lstlisting}
 
-When we try to reverse the types in our example, C issues a warning about truncating integers, but still many programmers can just ignore this warning and assume the data is properly sanitized. Rust obviously will not let a code compile with integer truncation, but the solution is a bit more complex this time, because a possibility is present that the value does not fit in the smaller type.
+When we try to reverse the types in our example, C issues a warning about truncating integers, but still many programmers can just ignore this warning and assume the data is properly sanitized. Rust obviously will not let a code compile with integer truncation, but the solution is a bit more complex this time because a possibility is present that the value does not fit in the smaller type.
 
 \begin{lstlisting}[language=C,frame=single,float=!ht,label={lst:rust-reverse-conv-error},caption={Rust Type Conversion Error}]
     error[E0308]: mismatched types
@@ -104,7 +104,7 @@ When we try to reverse the types in our example, C issues a warning about trunca
    For more information about this error, try `rustc --explain E0308`.
 \end{lstlisting}
 
-In this case the compiler suggests that we use \mycode{.unwrap\(\)}, which terminates the program if the previous function in the chain returned an error. However it is also possible to branch from the error, do something with the provided value and then even try to convert again to the smaller type, for example this would be one way to implement integer saturation.
+In this case, the compiler suggests that we use \mycode{.unwrap\(\)}, which terminates the program if the previous function in the chain returns an error. However it is also possible to branch from the error, do something with the provided value, and then even try to convert again to the smaller type, for example, this would be one way to implement integer saturation.
 
 \begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:rust-cap-integer},caption={Branching from an Error}]
     fn print_u16(num: u16) {
@@ -130,29 +130,29 @@ The Rust compiler is much more strict than that of other commonly used languages
 
 The ownership system of Rust is its most important feature to prevent common memory access violations such as reading an already freed memory segment or leaking memory. Each variable has exactly one owner and if the value from that variable is assigned to another variable, then the first one is "dropped" and becomes invalid. This is also true for variables that store data on the heap. In those cases, the value on the heap, such as the contents of a string, is not copied into a new place, only the owner is changed thus effectively making a shallow copy and invalidating the previous owner.
 
-On top of this, calling a function also counts as a variable assignment, as the local variable inside the function gets initialized with the value of the variable passed as the argument. This means that simply passing a variable to a function eliminates that variable. The strict ownership model also completely eliminates data races as a side-effect in multi-threaded programs.
+On top of this, calling a function also counts as a variable assignment, as the local variable inside the function gets initialized with the value of the variable passed as the argument. This means that simply passing a variable to a function eliminates that variable. The strict ownership model also eliminates data races as a side-effect in multi-threaded programs.
 
 \subsection{References (borrowing)}
 
-While the concept described previously guarantees a level of memory safety, it is also too strict to use comfortable in a standard programming language. Functions must be able to use variables without invalidating them, this is where references and borrowing come in. When we need to temporarily take ownership of a variable, for example in a function, we say that the variable is borrowed. Borrowing is done using references and reference taking is governed by a few basic principles.
+While the concept described previously guarantees a level of memory safety, it is also too strict to use comfortably in a standard programming language. Functions must be able to use variables without invalidating them, this is where references and borrowing come in. When we need to temporarily take ownership of a variable, for example in a function, we say that the variable is borrowed. Borrowing is done using references and reference taking is governed by a few basic principles.
 
-References to a variable can be either mutable or not mutable. A reference needs to be dropped before the original value it referred to is dropped. While a value is borrowed, the original variable does not have ownership of it and cannot modify it. A single variable can have either one mutable reference or multiple immutable reference at the same time. By adhering to these basic principles the compiler can guarantee that there will be no memory violations or pointers left dangling during the execution of the program.
+References to a variable can be either mutable or not mutable. A reference needs to be dropped before the original value it referred to is dropped. While a value is borrowed, the original variable does not have ownership of it and cannot modify it. A single variable can have either one mutable reference or multiple immutable references at the same time. By adhering to these basic principles the compiler can guarantee that there will be no memory violations or pointers left dangling during the execution of the program.
 
-There are also generic types for reference counting variables for cases where we cannot know when a variable will be dropped at compile time. They work similar to \mycode{shared\_ptr} in C++ and cause a little bit of runtime overhead so they are only used when absolutely necessary.
+There are also generic types for reference counting variables for cases where we cannot know when a variable will be dropped at compile time. They work similarly to \mycode{shared\_ptr} in C++ and cause a little bit of runtime overhead so they are only used when absolutely necessary.
 
 \subsection{Lifetimes}
 
-The lifetime of variables is usually determined by the scope they were created in. This gets increasingly more complicated when introducing heap allocated data and references to that, add in a function that returns a reference to a part of this data and even the compiler cannot always infer the correct lifetime of some variables. There is however a way to use lifetime specifiers to connect the lifetime of some variables. Two or more variables with the same lifetime specifiers will always stay active while one of them is active.
+The lifetime of variables is usually determined by the scope they were created in. This gets increasingly more complicated when introducing heap-allocated data and references to that, adding in a function that returns a reference to a part of this data and even the compiler cannot always infer the correct lifetime of some variables. There is however a way to use lifetime specifiers to connect the lifetime of some variables. Two or more variables with the same lifetime specifiers will always stay active while one of them is active.
 
 \section{Error handling}
 
-In Rust there are two types of errors, and handling them requires two separate paradigms.
+In Rust, there are two types of errors, and handling them requires two separate paradigms.
 
 \subsection{\mycode{Result} type}
 
-Recoverable errors are handled by the \mycode{Result<T, E>} type. This type could already be seen in the Type conversions chapter of this thesis. It either contains a value of the generic \mycode{T} type which signals that whoever passed this result did not encounter an error and could provide some result, or an error of type \mycode{E} which will contain the type of error that prevented providing a result. These errors are recoverable because it is possible to branch from them and do something in case they were encountered.
+Recoverable errors are handled by the \mycode{Result<T, E>} type. This type could already be seen in the Type conversions chapter of this thesis. It either contains a value of the generic \mycode{T} type which signals that whoever passed this result did not encounter an error and could provide some result, or an error of type \mycode{E} which will contain the type of error that prevented providing a result. These errors are recoverable because it is possible to branch from them and do something in case they are encountered.
 
-A typical use-case is when a program tries to open a file. The return value is in a \mycode{Result} type, and is either a file handler, or an error. Then for example, if the error tells us that the file could not be opened because it did not exist, we may choose to create the file, and continue with the file handler of the new file.
+A typical use case is when a program tries to open a file. The return value is in a \mycode{Result} type and is either a file handler or an error. Then for example, if the error tells us that the file could not be opened because it did not exist, we may choose to create the file and continue with the file handler of the new file.
 
 \subsection{\mycode{panic!} macro}
 
@@ -162,7 +162,7 @@ In embedded rust where we may not have an underlying OS to handle our program qu
 
 \section{Traits}
 
-Rust traits serve as a pivotal feature in the development of embedded systems, particularly when shaping driver interfaces. These traits, similarly to interfaces in other languages, allow for the encapsulation of behavior in a reusable manner. By defining a common set of methods that a type must implement, traits promote code consistency and organization.
+Rust traits serve as a pivotal feature in the development of embedded systems, particularly when shaping driver interfaces. These traits, similar to interfaces in other languages, allow for the encapsulation of behavior in a reusable manner. By defining a common set of methods that a type must implement, traits promote code consistency and organization.
 
 In embedded systems, where communication with diverse hardware peripherals is commonplace, traits find a natural application. They provide an elegant and modular approach to crafting interfaces for drivers that interact with sensors, actuators, and communication modules. This abstraction through traits facilitates the concealment of hardware-specific details, thereby enhancing code clarity. It also simplifies the process of replacing or upgrading hardware components without causing widespread code disruption.
 
@@ -174,4 +174,4 @@ Additionally, the ownership and borrowing system, combined with traits, contribu
 
 \section{Crates}
 
-Rust has an official package manager called cargo. With cargo we can easily add third party crates, which are similar to libraries in other languages, as dependencies to our project using the \mycode{cargo add <crate>} command. Cargo can do a lot more things but for this project, compiling the code via \mycode{cargo build} and handling crates are the most important features.
+Rust has an official package manager called cargo. With cargo, we can easily add third-party crates, which are similar to libraries in other languages, as dependencies to our project using the \mycode{cargo add <crate>} command. Cargo can do a lot more things but for this project, compiling the code via \mycode{cargo build} and handling crates are the most important features.
