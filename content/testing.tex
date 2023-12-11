@@ -2,7 +2,7 @@
 
 \section{Website}
 
-First the website is tested. The program on the second core is modified for the purpose of testing. Instead of correctly filtering the input its more important task will be periodically logging the value of alpha and beta to the serial line, even if it interferes with the timing of the DAC module.
+First, the website is tested. The program on the second core is modified for the purpose of testing. Instead of correctly filtering the input its more important task will be periodically logging the value of alpha and beta to the serial line, even if it interferes with the timing of the DAC module.
 
 \begin{figure}[H]
     \centering
@@ -20,7 +20,7 @@ Inputting new values on the webpage to this modified program results in the foll
     \label{fig:coef-log}
 \end{figure}
 
-Supplying new variables refreshes the site, which is currently the only way to change the average voltage displayed. During the test a sine wave with an amplitude of 500 mv and offset of 1 V was supplied to the ADC.
+Supplying new variables refreshes the site, which is currently the only way to change the average voltage displayed. During the test, a sine wave with an amplitude of 500 mv and an offset of 1 V was supplied to the ADC.
 
 \begin{figure}[H]
     \centering
@@ -33,9 +33,9 @@ These results confirm that the two cores can communicate and exchange the necess
 
 \section{Low Pass Filter}
 
-Testing the functionality of the second core required a tool that can generate an input and handle the output of the analog peripherals on the microcontroller. For this purpose a Picoscope 2000 series oscilloscope was used. It can act as a traditional digital oscilloscope and also generate arbitrary functions either based on common signals or a series of samples.
+Testing the functionality of the second core required a tool that can generate an input and handle the output of the analog peripherals on the microcontroller. For this purpose, a Picoscope 2000 series oscilloscope was used. It can act as a traditional digital oscilloscope and also generate arbitrary functions either based on common signals or a series of samples.
 
-As a first step I tested the upper limit of the frequency the microcontroller can put out. In this configuration the M4 core was programmed to transform the 16 bit input from the ADC to a 12 bit output for the DAC, so essentially the input becomes the output without any modification. After some experimentation the limit came out at around 3 kHz, where the output is fairly well preserved.
+As a first step, I tested the upper limit of the frequency the microcontroller can put out. In this configuration, the M4 core was programmed to transform the 16-bit input from the ADC to a 12-bit output for the DAC, so essentially the input becomes the output without any modification. After some experimentation, the limit came out at around 3 kHz, where the output is fairly well preserved.
 
 \begin{figure}[H]
     \centering
@@ -44,7 +44,7 @@ As a first step I tested the upper limit of the frequency the microcontroller ca
     \label{fig:upperlimit-good}
 \end{figure}
 
-At around 8 kHz the signal lost its integrity. The shape of the sine wave is still visible but the amplitude is reduces, as there is not enough time for the DAC to settle properly.
+At around 8 kHz the signal lost its integrity. The shape of the sine wave is still visible but the amplitude is reduced, as there is not enough time for the DAC to settle properly.
 
 \begin{figure}[H]
     \centering
@@ -53,7 +53,7 @@ At around 8 kHz the signal lost its integrity. The shape of the sine wave is sti
     \label{fig:upperlimit-bad}
 \end{figure}
 
-With this information, I started experimenting with the signal filtering. First I created an input, regular white noise added to a sine wave.
+With this information, I started experimenting with signal filtering. First I created an input, regular white noise added to a sine wave.
 
 \begin{figure}[H]
     \centering
@@ -62,7 +62,7 @@ With this information, I started experimenting with the signal filtering. First 
     \label{fig:sine-with-error}
 \end{figure}
 
-At first alpha is set to 1.0 and beta is set to 0.0, this configuration bypasses the filter entirely.
+At first, alpha is set to 1.0 and beta is set to 0.0, this configuration bypasses the filter entirely.
 
 \begin{figure}[H]
     \centering
