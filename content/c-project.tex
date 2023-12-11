@@ -4,7 +4,7 @@ To create a usable multicore Rust project, a good starting point is studying C l
 
 \section{Project structure}
 
-Creating C language projects for the STM32H745 microcontroller can be done in the official IDE of STMicroelectronics which is called STMCubeIDE. The software is Eclipse based and can be used to generate empty or example projects, program, and debug the code on the hardware. This is also true for multicore projects, as there are now example projects that use both cores of a H7 series microcontroller. \cite{CExamples}
+Creating C language projects for the STM32H745 microcontroller can be done in the official IDE of STMicroelectronics which is called STMCubeIDE. The software is Eclipse based and can be used to generate empty or example projects, program, and debug the code on the hardware. This is also true for multicore projects, as there are now example projects that use both cores of a H7 series microcontroller \cite{CExamples}.
 
 Creating a dual-core project in STMCubeIDE is similar to how one would create a normal project. By selecting an H7 series MCU, not one but three connected projects are generated. A project similar to a single-core one will be created for both the M7 and the M4 core. These projects can almost function as standalone projects, they can have their source files, header files, and references. These projects also have a separate \mycode{main.c} file which contains the entry point of the current core. They also both contain builder files, linker files, and output folders, so essentially they can be built separately. By default, programming and debugging are also done with these separate projects, so when the IDE is used the cores are programmed one by one. Also as a limitation of the software, only one of the two cores can be effectively debugged at a time, while the other one either runs or is in a HALT state.
 
@@ -16,7 +16,7 @@ Besides the pinout configuration, the clock configuration can also be set in thi
 
 \section{An example project}
 
-To fully understand the intended use of this dual-core MCU, we must take a look at a simple example project. This will give us a clear picture of how the microcontroller starts, how peripherals are handled, and how the two cores communicate. The project this essay will take a closer look at is an example project from ST that uses message buffers from FreeRTOS to demonstrate communication between the two cores. \cite{CDemo}
+To fully understand the intended use of this dual-core MCU, we must take a look at a simple example project. This will give us a clear picture of how the microcontroller starts, how peripherals are handled, and how the two cores communicate. The project this essay will take a closer look at is an example project from ST that uses message buffers from FreeRTOS to demonstrate communication between the two cores \cite{CDemo}.
 
 \subsection{General description}
 

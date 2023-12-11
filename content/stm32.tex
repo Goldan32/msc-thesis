@@ -33,7 +33,7 @@ Several clock domains make it possible to fine-tune our application for low powe
 
 \subsubsection{Analog Digital Converter}
 
-Almost all modern microcontrollers include some kind of analog-to-digital converter peripheral and the STM32H745 is not an exception. \cite{ADCDescription} It has three ADC-s where ADC1 and ADC2 are tightly coupled with ADC1 being the master while ADC3 is fully independent. Each ADC consists of a 16-bit successive approximation analog-to-digital converter and has up to 20 multiplexed channels. A/D conversion of the various channels can be performed in single, continuous, scan, or discontinuous mode. The result of the conversion is stored in a left-aligned or right-aligned 32-bit data register.
+Almost all modern microcontrollers include some kind of analog-to-digital converter peripheral and the STM32H745 is not an exception \cite{ADCDescription}. It has three ADC-s where ADC1 and ADC2 are tightly coupled with ADC1 being the master while ADC3 is fully independent. Each ADC consists of a 16-bit successive approximation analog-to-digital converter and has up to 20 multiplexed channels. A/D conversion of the various channels can be performed in single, continuous, scan, or discontinuous mode. The result of the conversion is stored in a left-aligned or right-aligned 32-bit data register.
 
 The ADC-s can use a lower resolution than 16-bit to decrease conversion time which is also independent of the AHB bus clock frequency. The ADCs are capable of self-calibration which reduces the complexity of their initialization. The start of a conversion can be initiated either by means of the software calling the applicable driver function, or hardware triggers, ie. interrupts of timer events. They are also capable of sending in interrupts themselves when a conversion is finished.
 
@@ -56,7 +56,7 @@ Where $T_{SMPL}$ is the sampling time which depends on the channel and $T_{SAR}$
 
 \subsubsection{Digital Analog Converter}
 
-The DAC module is a voltage output digital-to-analog converter that can be configured in 8 or 12-bit mode. The DAC module has two output channels, and both of them have their converters. In dual DAC channel mode, conversions could be done independently or simultaneously when both channels are grouped for synchronous update operations.\cite{DACDescription}
+The DAC module is a voltage output digital-to-analog converter that can be configured in 8 or 12-bit mode. The DAC module has two output channels, and both of them have their converters. In dual DAC channel mode, conversions could be done independently or simultaneously when both channels are grouped for synchronous update operations \cite{DACDescription}.
 
 There is one unified interface but two different DAC channels that can work in synchronized or independent modes. The DAC is able to generate noise-wave and triangular waves. They also have capabilities of using the DMA controller for their data buffers and using external triggers, ie. interrupts or timer events, for conversion is possible as well. The DAC can send interrupts to signal buffer underrun when using DMA mode but not in any other case.
 
