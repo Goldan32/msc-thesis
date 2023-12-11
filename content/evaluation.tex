@@ -2,12 +2,12 @@
 
 \section{Results}
 
-During the first part of this task, a starting project was created that can form the starting point for a more complex multicore application. I explored the multicore solutions of an example C project, and used those principles when creating a Rust implementation. I also explored the capabilities of the hardware and started experimenting with the simpler peripherals using Rust.
+During the first part of this task, a starting project was created that can form the starting point for a more complex multicore application. I explored the multicore solutions of an example C project and used those principles when creating a Rust implementation. I also explored the capabilities of the hardware and started experimenting with the simpler peripherals using Rust.
 
-After a minimal project was done I could start experimenting with more advanced features such as configuring a debugger or a Docker container. In this stage other peripherals were configured and tested. I successfully used the ethernet interface from the M7 core to receive and send HTTP requests via TCP. I also implemented a HAL-like driver for the hardware semaphores present on the microcontroller, based on the functionalities of the original driver from the manufacturer.
+After a minimal project was done I could start experimenting with more advanced features such as configuring a debugger or a Docker container. In this stage, other peripherals were configured and tested. I successfully used the ethernet interface from the M7 core to receive and send HTTP requests via TCP. I also implemented a HAL-like driver for the hardware semaphores present on the microcontroller, based on the functionalities of the original driver from the manufacturer.
 
 Finally, an example application was created showcasing the capabilities of a multicore microcontroller using Rust.
 
 \section{Development Opportunities}
 
-During this project I noticed that multicore support was not in the mind of the developers when planning the Rust support of STM32 microcontrollers. To achieve widespread usage, the first task would be to expand the underlying STM32 support crates with multicore capabilities. Some of the solutions in this project felt like workarounds, but some minor changes to crates buried deeper in the dependency chain would make it easier to create more comfortable solutions. However changing something that many projects depend on is never easy so this type of change would take time and would need widespread support.
+During this project I noticed that multicore support was not in the mind of the developers when planning the Rust support of STM32 microcontrollers. To achieve widespread usage, the first task would be to expand the underlying STM32 support crates with multicore capabilities. Some of the solutions in this project felt like workarounds, but some minor changes to crates buried deeper in the dependency chain would make it easier to create more comfortable solutions. However, changing something that many projects depend on is never easy so this type of change would take time and would need widespread support.
