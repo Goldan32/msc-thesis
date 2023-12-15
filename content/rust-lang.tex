@@ -2,13 +2,13 @@
 
 This chapter is a brief introduction to the Rust programming language and its most important features in the context of this thesis.
 
-\section{A compiled system programming language}
+\section{A Compiled System Programming Language}
 
 Officially Rust is considered a system programming language which means that its primary function is performance and ease of access to the hardware while still providing higher-level programming concepts such as data structures to hold and organize data \cite{SystemProgrammingLanguageWikipedia}. For example, in Rust, we can find a dynamic string type, but may also choose to take it as a byte array and manipulate the data that way.
 
 Much like C and C++, Rust programs can only be run after they have been compiled into a binary. The aforementioned higher-level concepts only exist at compile time so the binary program can be as efficient as possible. This will be true for all further concepts explained in this section, the resulting binaries from a C and Rust program are comparable both in size and execution speed, only, the Rust compiler is more sophisticated than the C compiler.
 
-\section{Type system}
+\section{Type System}
 
 \subsection{Types on the stack}
 
@@ -122,7 +122,7 @@ In this case, the compiler suggests that we use \mycode{.unwrap\(\)}, which term
 
 Having restrictions like this can prevent the programmer from misinterpreting data in a function as it will always be in the smallest type possible that fits it without errors.
 
-\section{Memory safety}
+\section{Memory Safety}
 
 The Rust compiler is much more strict than that of other commonly used languages. This makes it almost impossible to write unsafe programs but comes with a steeper learning curve.
 
@@ -144,7 +144,7 @@ There are also generic types for reference counting variables for cases where we
 
 The lifetime of variables is usually determined by the scope they were created in. This gets increasingly more complicated when introducing heap-allocated data and references to that, adding in a function that returns a reference to a part of this data and even the compiler cannot always infer the correct lifetime of some variables. There is however a way to use lifetime specifiers to connect the lifetime of some variables. Two or more variables with the same lifetime specifiers will always stay active while one of them is active.
 
-\section{Error handling}
+\section{Error Handling}
 
 In Rust, there are two types of errors, and handling them requires two separate paradigms.
 

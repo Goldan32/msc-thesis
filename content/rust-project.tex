@@ -2,7 +2,7 @@
 
 Before any application can be developed in Rust for this MCU, the state of Rust support needs to be properly assessed for both single and dual-core STM32H7 devices. By the end of this chapter, a multi-core Rust "Hello World" project should be ready as a starting point for more complex applications.
 
-\section{Single core support}
+\section{Single Core Support}
 
 \subsection{General structure}
 
@@ -124,7 +124,7 @@ With all this, a simple, single-core application is ready and we can start to re
     cargo flash --chip STM32H745ZITx
 \end{lstlisting}
 
-\section{Multicore project structure}
+\section{Multicore Project Structure}
 
 This section discusses possible structures and hierarchies for a multicore project in Rust for the STM32H745 microcontroller.
 
@@ -187,7 +187,7 @@ pub static CPU2_RESET_VECTOR: unsafe extern "C" fn() -> ! = main2;
 
 The function itself initializes a GPIO and its clock, then toggles it every 4 million CPU cycles. The actual time of the delay will be determined by the frequency configured by the other core. Below the function the directives can be seen that will place the address of this function in the reset vector for the M4 core. While this solution could work well, there are some compromises, so it is worth investigating further in hopes of finding a better project structure.
 
-\section{The microamp framework}
+\section{The Microamp Framework}
 
 The microamp framework was developed recently as a framework for multicore embedded devices. It sort of combines the previous two approaches by providing a way to compile different codes for the two cores but retaining the possibility of placing variables in shared memory. The framework provides two main functionalities. One of them is the \mycode{#[shared]} attribute, which can signal that a variable should be placed in shared memory. This also requires that some parts of the memory map must be marked as shared in the linker script, and the variable must also be static. The other main functionality is code sharing and division between the cores. By default, every code will be compiled and loaded onto both cores. However, with attributes such as \mycode{#[cfg(core = "0")]} or the \mycode{cfg!(core = "0")} macro parts of the code can be directed to only be compiled to a specific core.
 
@@ -320,7 +320,7 @@ When this code is compiled, the M7 core will only contain the upper arm of the m
 
 The first part of this code is the same for both cores, which in turn is the same as the code in the single-core case. Both cores create an instance of the singleton peripherals, so they both can have unrestricted access. This is another area where data races need to be prevented by the programmer. In this case, the cores never use the same GPIO port, and the LED-s are operated are located on separate ones, but in the future, if the two cores do need to use the same peripheral, they will also need to be protected by a semaphore, ideally a hardware semaphore.
 
-\section{Linker scripts}
+\section{Linker Scripts}
 
 There is one more thing missing for the dual-core program to function properly. The microamp framework requires a separate linker script called \mycode{core0.x}, \mycode{core1.x} etc., one for every core. This presents another problem for this project. The \mycode{link.x} linker script from the \mycode{embedded-hal} crate is special in the sense that it wants to include a linker file called \mycode{memory.x}. In simple cases, this is not an issue as HAL crates usually provide this file and if not, we can create it at the root of our project. However, the microamp framework does not require this the \mycode{memory.x} script, but separate ones like \mycode{core0.x}, which usually hold almost the same content as the \mycode{memory.x} script is just a bit more customized for the specific core.
 
@@ -337,7 +337,7 @@ The last thing we need to do is define a memory section that can be used as a sh
     } > AXISRAM
 \end{lstlisting}
 
-\section{Build flow}
+\section{Build Flow}
 
 The microamp framework is in alpha state so it requires the nightly version of the rust toolchain. Besides that, building the project is pretty simple using the \mycode{microamp} command.
 

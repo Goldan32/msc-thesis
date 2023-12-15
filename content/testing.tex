@@ -33,7 +33,7 @@ These results confirm that the two cores can communicate and exchange the necess
 
 \section{Low Pass Filter}
 
-\subsection{DAC Capabilities}
+\subsection{DAC capabilities}
 
 Testing the functionality of the second core required a tool that can generate an input and handle the output of the analog peripherals on the microcontroller. For this purpose, a Picoscope 2000 series oscilloscope was used. It can act as a traditional digital oscilloscope and also generate arbitrary functions either based on common signals or a series of samples.
 
@@ -64,7 +64,7 @@ The figure below shows that 15 cycles were needed for the best results in this t
     \label{fig:comp}
 \end{figure}
 
-\subsection{ADC Capabilities}
+\subsection{ADC capabilities}
 
 Handling the ADC and waiting for a conversion makes up for the 15 cycles needed for the DAC to settle. As a blocking call to the ADC is made to get a sample, the \mycode{nop()} calls can be removed entirely. In this test, the microcontroller samples its analog input and outputs the same value as its analog output.
 
@@ -85,7 +85,7 @@ The highest frequency in this case was around 20 kHz. At higher frequency values
     \label{fig:sine20khz}
 \end{figure}
 
-\subsection{Filter Capabilities}
+\subsection{Filter capabilities}
 
 In this section, the code used already contains the implemented filter. The first step in this test was to plot the expected Bode diagrams of the filter with some configurations.
 

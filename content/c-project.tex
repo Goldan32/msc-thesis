@@ -2,7 +2,7 @@
 
 To create a usable multicore Rust project, a good starting point is studying C language projects created by the official tools of the manufacturer.
 
-\section{Project structure}
+\section{Project Structure}
 
 Creating C language projects for the STM32H745 microcontroller can be done in the official IDE of STMicroelectronics which is called STMCubeIDE. The software is Eclipse based and can be used to generate empty or example projects, program, and debug the code on the hardware. This is also true for multicore projects, as there are now example projects that use both cores of a H7 series microcontroller \cite{CExamples}.
 
@@ -14,7 +14,7 @@ In STM32 projects, lots of code around setting up the peripherals is generated d
 
 Besides the pinout configuration, the clock configuration can also be set in this GUI. This is especially helpful if our project requires different clocks for different clock domains. The clock settings can be configured in a hierarchical graphical interface where the sources and multiplications are visualized on a flow-control diagram. Clock signals for certain domains can even be turned off to save power if none of the corresponding peripherals are used.
 
-\section{An example project}
+\section{An Example Project}
 
 To fully understand the intended use of this dual-core MCU, we must take a look at a simple example project. This will give us a clear picture of how the microcontroller starts, how peripherals are handled, and how the two cores communicate. The project this essay will take a closer look at is an example project from ST that uses message buffers from FreeRTOS to demonstrate communication between the two cores \cite{CDemo}.
 

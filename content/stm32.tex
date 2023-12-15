@@ -2,7 +2,7 @@
 
 The STM32H745 is a heterogeneous dual-core microcontroller from STMicroelectronics. For this task, I was able to acquire a Nucleo-H745 development board which has several useful peripherals besides the aforementioned MCU chip.
 
-\section{Choosing the right hardware}
+\section{Choosing the Appropriate Hardware}
 
 In the early stages of the project, 2 microcontrollers were offered for the task. A quad-core MCU from Texas Instruments with homogeneous architecture and the STM32H745.
 
@@ -31,7 +31,7 @@ Several clock domains make it possible to fine-tune our application for low powe
 
 \subsection{Analog interfaces}
 
-\subsubsection{Analog Digital Converter}
+\subsubsection{Analog digital converter}
 
 Almost all modern microcontrollers include some kind of analog-to-digital converter peripheral and the STM32H745 is not an exception \cite{ADCDescription}. It has three ADC-s where ADC1 and ADC2 are tightly coupled with ADC1 being the master while ADC3 is fully independent. Each ADC consists of a 16-bit successive approximation analog-to-digital converter and has up to 20 multiplexed channels. A/D conversion of the various channels can be performed in single, continuous, scan, or discontinuous mode. The result of the conversion is stored in a left-aligned or right-aligned 32-bit data register.
 
@@ -54,7 +54,7 @@ Where $T_{SMPL}$ is the sampling time which depends on the channel and $T_{SAR}$
     \label{fig:adc-timing}
 \end{figure}
 
-\subsubsection{Digital Analog Converter}
+\subsubsection{Digital analog converter}
 
 The DAC module is a voltage output digital-to-analog converter that can be configured in 8 or 12-bit mode. The DAC module has two output channels, and both of them have their converters. In dual DAC channel mode, conversions could be done independently or simultaneously when both channels are grouped for synchronous update operations \cite{DACDescription}.
 
@@ -91,7 +91,7 @@ Multiple pins can be configured for USART peripherals, however the most importan
 
 \subsection{Other useful peripherals}
 
-\subsubsection{GPIO-s}
+\subsubsection{GPIOs}
 
 As the pins of the STM32H745 MCU are very configurable and 144 pins are routed onto the development board, there is a considerable amount of GPIO-s that can be utilized if needed, though many of them are taken by other peripherals on the board. Three GPIO-s are each routed to a different colored user LED on the board, which is extremely useful in the early bring-up of a board as blinking an LED is often considered the "Hello World of hardware-related projects". Also present on the board are 2 buttons, one of which is a dedicated reset button while the other can be configured by the user.
 

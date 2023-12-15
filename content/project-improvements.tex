@@ -177,7 +177,7 @@ In the last section of the \mycode{Dockerfile}, all the Rust-related tools and t
 
 Even if all these tools can co-exist with other projects on the host, they are conveniently handled by this container, and developers do not need to spend time acquiring them one by one. Going through the \mycode{Dockerfile} this way also reveals another advantage. Not only are all the dependencies listed clearly and concisely, but the way they can be obtained is also described. This makes it easy to understand and recreate the environment that is needed to use a project like this one.
 
-\subsubsection{VSCode Dev Containers}
+\subsubsection{VSCode dev containers}
 
 In Visual Studio Code a project on a remote server can be opened and edited just like if it were a local project. Docker containers can be treated similarly by using the Dev Containers extension. The extension builds the container and runs it, we only need to open the project folder locally in VSCode and issue a command that reopens the project in its container.
 
