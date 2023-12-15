@@ -37,7 +37,7 @@ These results confirm that the two cores can communicate and exchange the necess
 
 Testing the functionality of the second core required a tool that can generate an input and handle the output of the analog peripherals on the microcontroller. For this purpose, a Picoscope 2000 series oscilloscope was used. It can act as a traditional digital oscilloscope and also generate arbitrary functions either based on common signals or a series of samples.
 
-As a first step, I wanted to figure out the maximum frequency of the DAC using this configuration in the worst case scenario. I used code on the M4 core that alternates the DAC output between the minimum and the maximum value. As Figure~{fig:dac-timing} suggests, we will need to leave time for the DAC to settle after requesting a change on its output. In theory, this time equals 3 bus cycles. The AHB bus frequency matches the system clock frequency, 200 MHz in this case. In practice however I have found that at least 15 cycles are needed for the DAC to settle. This is most likely due to other overheads during the usage of the peripheral.
+As a first step, I wanted to figure out the maximum frequency of the DAC using this configuration in the worst-case scenario. I used code on the M4 core that alternates the DAC output between the minimum and the maximum value. As Figure~{fig:dac-timing} suggests, we will need to leave time for the DAC to settle after requesting a change in its output. In theory, this time equals 3 bus cycles. The AHB bus frequency matches the system clock frequency, 200 MHz in this case. In practice, however, I have found that at least 15 cycles are needed for the DAC to settle. This is most likely due to other overheads during the usage of the peripheral.
 
 \begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:only-dac-test},caption={Code for Testing DAC Frequency Limit}]
     let mut nops: u32 = 15;
@@ -66,7 +66,7 @@ The figure below shows that 15 cycles were needed for the best results in this t
 
 \subsection{ADC Capabilities}
 
-Handling the ADC and waiting for a conversion makes up for the 15 cycles needed for the DAC to settle. As a blocking call to the ADC is made to get a sample, the \mycode{nop()} calls can be removed entirely. In this test, the microcontroller samples its analog input, and outputs the same value on its analog output.
+Handling the ADC and waiting for a conversion makes up for the 15 cycles needed for the DAC to settle. As a blocking call to the ADC is made to get a sample, the \mycode{nop()} calls can be removed entirely. In this test, the microcontroller samples its analog input and outputs the same value as its analog output.
 
 \begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:adc-dac-test},caption={Code for Testing ADC and DAC Together}]
     loop {
@@ -179,7 +179,7 @@ Finally, I tested the filtering capabilities of this system with a noisy input. 
     \label{fig:sineerror}
 \end{figure}
 
-This signal can be used as the output of the Picoscope used for testing. The scope can modify the frequency and amplitude of this signal. For this test, the \mycode{alpha = 0.2} and \mycode{beta = 0.01} configuration was used. The dampening at with this signal started at lower frequencies. At 100 Hz a fairly clear sine wave can be observed, and this remains the case up until 4 kHz.
+This signal can be used as the output of the Picoscope used for testing. The scope can modify the frequency and amplitude of this signal. For this test, the \mycode{alpha = 0.2} and \mycode{beta = 0.01} configuration was used. The dampening with this signal started at lower frequencies. At 100 Hz a fairly clear sine wave can be observed, and this remains the case up until 4 kHz.
 
 \begin{figure}[H]
     \centering
