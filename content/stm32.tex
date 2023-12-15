@@ -27,7 +27,7 @@ Power can be provided to the MCU in a variety of ways and with different voltage
 
 In the default setup, the MCU starts with an external clock signal that originates from the Board Management Controller. This controller is also responsible for programming and debugging. The microcontroller contains internal oscillators as well as PLLs. The usage of these can be configured in runtime during the setup phase of an application. Usually, in the first part of initializing the application the clock is set, in this case, a PLL will be used with the external clock signal from the Board Controller used as reference.
 
-Several clock domains make it possible to fine-tune our application for low power consumption. Configuration code can be generated using official tools from the manufacturer using a GUI application. A maximum frequency of 240 MHz can be achieved for the M7 core and 120 MHz for the M4 core.
+Several clock domains make it possible to fine-tune our application for low power consumption. Configuration code can be generated using official tools from the manufacturer using a GUI application. A maximum frequency of 480 MHz can be achieved for the M7 core and 240 MHz for the M4 core.
 
 \subsection{Analog interfaces}
 

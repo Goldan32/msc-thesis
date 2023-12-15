@@ -5,7 +5,7 @@ In this chapter, I will showcase the development of an example project that aims
 
 \section{General Description}
 
-The example application implements a very basic webserver on the M7 core of the microcontroller and does some light signal processing on the M4 core. The general direction of this project was to design one part of the application to use the ethernet peripheral in some capacity, and the other to be capable of doing a task in real time. Also I had to make sure that safe, two-way communication between the two cores is displayed in the application.
+The example application implements a very basic web server on the M7 core of the microcontroller and does some light signal processing on the M4 core. The general direction of this project was to design one part of the application to use the ethernet peripheral in some capacity, and the other to be capable of doing a task in real time. Also I had to make sure that safe, two-way communication between the two cores is displayed in the application.
 
 Finally, an application draft was drawn up. In it, the M7 core handles the ethernet peripheral and takes on the role of a simple web server. It hosts a simple website on a fixed IP address where coefficients of a low-pass filter can be supplied. The site also displays the average value of an ADC peripheral. The other core handles the previous ADC peripheral by performing filtering with the coefficients supplied on the website and a fixed formula. The filtered signal is emitted on a DAC peripheral with minimal latency latency. An average value is also calculated by the M4 core periodically from a configurable number of samples, this value will be displayed on the website.
 
@@ -213,9 +213,9 @@ In the last line of Listing~\ref{lst:dac-init} the output value is set to the 50
 
 In this section, I will showcase what the two cores are doing after their initialization is complete and enter their respective infinite loops.
 
-\subsection{Webserver}
+\subsection{Web Server}
 
-On the M7 core, a very minimalist webserver is implemented. The server will wait for a GET or POST HTTP request and send back an answer containing a simple HTML website.
+On the M7 core, a very minimalist web server is implemented. The server will wait for a GET or POST HTTP request and send back an answer containing a simple HTML website.
 
 \begin{lstlisting}[language=Rust,frame=single,float=!ht,style=customrust,label={lst:html-strings},caption={HTML Page Defined in a String}]
     const WEBPAGE_UPPER: &str =
@@ -249,7 +249,7 @@ On the M7 core, a very minimalist webserver is implemented. The server will wait
     \label{fig:html-page}
 \end{figure}
 
-The HTML page is broken into an upper and lower part. The middle can contain additional elements, for example, the average value will be displayed this way. Besides that, it has a title and a form in which an alpha and a beta value can be provided. How these coefficients influence the filtering done on the other core is also displayed on the page.
+The HTML page is broken into two strings, an upper and a lower part. By formatting these string, we can insert HTML content between the two parts, for example, the average value will be displayed this way. Besides that, it has a title and a form in which an alpha and a beta value can be provided. How these coefficients influence the filtering done on the other core is also displayed on the page.
 
 As with any server using sockets, the loop of this one starts with entering a \mycode{listen()} function. Once a connection is established, the server can call a \mycode{recv()} function. The data can be received in a closure, where it can be collected into a byte array.
 
